@@ -1,0 +1,4 @@
+onlyBuiltDependencies:
+  - bufferutil
+  - core-js
+  - utf-8-validate

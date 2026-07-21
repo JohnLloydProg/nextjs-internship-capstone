@@ -1,6 +1,8 @@
 // TODO: Task 3.1 - Design database schema for users, projects, lists, and tasks
 // TODO: Task 3.3 - Set up Drizzle ORM with type-safe schema definitions
 
+import { pgTable } from "drizzle-orm/pg-core";
+
 /*
 TODO: Implementation Notes for Interns:
 
@@ -37,8 +39,8 @@ export const users = pgTable('users', {
 */
 
 // Placeholder exports to prevent import errors
-export const users = "TODO: Implement users table schema"
-export const projects = "TODO: Implement projects table schema"
-export const lists = "TODO: Implement lists table schema"
-export const tasks = "TODO: Implement tasks table schema"
-export const comments = "TODO: Implement comments table schema"
+export const users = pgTable("users", {});
+export const projects = "TODO: Implement projects table schema";
+export const lists = "TODO: Implement lists table schema";
+export const tasks = "TODO: Implement tasks table schema";
+export const comments = "TODO: Implement comments table schema";
