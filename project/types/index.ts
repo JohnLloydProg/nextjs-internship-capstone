@@ -6,6 +6,7 @@ export interface User {
 	clerkId: string;
 	email: string;
 	name: string;
+	profilePic: string | null;
 	createdAt: Date;
 	updatedAt: Date;
 }
@@ -37,7 +38,7 @@ export interface Task {
 	description?: string;
 	listId: string;
 	assigneeId?: string;
-	priority: "low" | "medium" | "high";
+	priority: "low" | "medium" | "high" | "urgent";
 	dueDate?: Date;
 	position: number;
 	createdAt: Date;
@@ -53,6 +54,3 @@ export interface Comment {
 	createdAt: Date;
 	updatedAt: Date;
 }
-
-// Note for interns: These types should match your database schema
-// Update as needed when implementing the actual database schema

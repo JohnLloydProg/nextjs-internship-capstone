@@ -1,8 +1,8 @@
 {
 	"version": "8",
 	"dialect": "postgres",
-	"id": "cf1d3e23-f0e1-4ab4-b2cd-ed28c6802b5a",
-	"prevIds": ["00000000-0000-0000-0000-000000000000"],
+	"id": "b2373932-62b4-4b98-beaf-a46334057246",
+	"prevIds": ["cf1d3e23-f0e1-4ab4-b2cd-ed28c6802b5a"],
 	"ddl": [
 		{
 			"values": ["low", "medium", "high", "urgent"],
@@ -470,6 +470,19 @@
 			"table": "users"
 		},
 		{
+			"type": "text",
+			"typeSchema": null,
+			"notNull": false,
+			"dimensions": 0,
+			"default": null,
+			"generated": null,
+			"identity": null,
+			"name": "profile_pic",
+			"entityType": "columns",
+			"schema": "public",
+			"table": "users"
+		},
+		{
 			"type": "timestamp",
 			"typeSchema": null,
 			"notNull": true,
@@ -620,6 +633,27 @@
 			"entityType": "indexes",
 			"schema": "public",
 			"table": "tasks"
+		},
+		{
+			"nameExplicit": true,
+			"columns": [
+				{
+					"value": "clerk_id",
+					"isExpression": false,
+					"asc": true,
+					"nullsFirst": false,
+					"opclass": null
+				}
+			],
+			"isUnique": false,
+			"where": null,
+			"with": "",
+			"method": "btree",
+			"concurrently": false,
+			"name": "users_clerk_id_idx",
+			"entityType": "indexes",
+			"schema": "public",
+			"table": "users"
 		},
 		{
 			"nameExplicit": false,

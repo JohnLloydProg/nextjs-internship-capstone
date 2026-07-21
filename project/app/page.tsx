@@ -1,7 +1,7 @@
+import { Show, UserButton } from "@clerk/nextjs";
 import { ArrowRight, CheckCircle, Kanban, Users } from "lucide-react";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Show, UserButton } from "@clerk/nextjs";
 
 export default function HomePage() {
 	return (

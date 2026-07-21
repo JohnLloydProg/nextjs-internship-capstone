@@ -1,13 +1,14 @@
+import { defineRelations } from "drizzle-orm";
 import {
+	index,
+	integer,
+	pgEnum,
 	pgTable,
 	text,
 	timestamp,
 	uuid,
-	integer,
-	pgEnum,
-	index,
+	varchar,
 } from "drizzle-orm/pg-core";
-import { defineRelations } from "drizzle-orm";
 
 export const priorityEnum = pgEnum("priority", [
 	"low",
@@ -16,17 +17,22 @@ export const priorityEnum = pgEnum("priority", [
 	"urgent",
 ]);
 
-export const users = pgTable("users", {
-	id: uuid("id").primaryKey().defaultRandom(),
-	clerkId: text("clerk_id").notNull().unique(),
-	email: text("email").notNull().unique(),
-	name: text("name").notNull(),
-	createdAt: timestamp("created_at").defaultNow().notNull(),
-	updatedAt: timestamp("updated_at")
-		.defaultNow()
-		.notNull()
-		.$onUpdate(() => new Date()),
-});
+export const users = pgTable(
+	"users",
+	{
+		id: uuid("id").primaryKey().defaultRandom(),
+		clerkId: text("clerk_id").notNull().unique(),
+		email: text("email").notNull().unique(),
+		name: text("name").notNull(),
+		profilePic: text("profile_pic"),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.notNull()
+			.$onUpdate(() => new Date()),
+	},
+	(t) => [index("users_clerk_id_idx").on(t.clerkId)],
+);
 
 export const projects = pgTable(
 	"projects",
