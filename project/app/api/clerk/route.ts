@@ -116,4 +116,6 @@ export async function POST(req: NextRequest) {
 			break;
 		}
 	}
+
+	return new Response("Event was processed succsessfully", { status: 200 });
 }
