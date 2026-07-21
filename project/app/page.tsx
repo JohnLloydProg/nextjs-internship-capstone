@@ -1,6 +1,7 @@
 import { ArrowRight, CheckCircle, Kanban, Users } from "lucide-react";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Show, UserButton } from "@clerk/nextjs";
 
 export default function HomePage() {
 	return (
@@ -12,7 +13,7 @@ export default function HomePage() {
 						<div className="text-2xl font-bold text-blue_munsell-500">
 							ProjectFlow
 						</div>
-						<div className="flex items-center space-x-4">
+						<div className="flex items-center gap-4">
 							<ThemeToggle />
 							<Link
 								href="/dashboard"
@@ -26,18 +27,23 @@ export default function HomePage() {
 							>
 								Projects
 							</Link>
-							<Link
-								href="/sign-in"
-								className="text-outer_space-500 dark:text-platinum-500 hover:text-blue_munsell-500"
-							>
-								Sign In
-							</Link>
-							<Link
-								href="/sign-up"
-								className="px-4 py-2 bg-blue-munsell text-white rounded-lg hover:bg-blue-munsell/90"
-							>
-								Get Started
-							</Link>
+							<Show when="signed-out">
+								<Link
+									href="/sign-in"
+									className="text-outer_space-500 dark:text-platinum-500 hover:text-blue_munsell-500"
+								>
+									Sign In
+								</Link>
+								<Link
+									href="/sign-up"
+									className="px-4 py-2 bg-blue-munsell text-white rounded-lg hover:bg-blue-munsell/90"
+								>
+									Get Started
+								</Link>
+							</Show>
+							<Show when="signed-in">
+								<UserButton />
+							</Show>
 						</div>
 					</div>
 				</div>
