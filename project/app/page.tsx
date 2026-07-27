@@ -1,53 +1,11 @@
-import { Show, UserButton } from "@clerk/nextjs";
 import { ArrowRight, CheckCircle, Kanban, Users } from "lucide-react";
 import Link from "next/link";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { Header } from "@/components/header";
 
 export default function HomePage() {
 	return (
 		<div className="min-h-screen bg-linear-to-br from-platinum to-platinum/50 dark:from-outer_space-500 dark:to-payne's_gray-500">
-			{/* Header */}
-			<header className="border-b border-french_gray-300 dark:border-payne's_gray-400 bg-white/80 dark:bg-outer_space-500/80 backdrop-blur-sm">
-				<div className="container mx-auto px-4 sm:px-6 lg:px-8">
-					<div className="flex justify-between items-center h-16">
-						<div className="text-2xl font-bold text-blue_munsell-500">
-							ProjectFlow
-						</div>
-						<div className="flex items-center gap-4">
-							<ThemeToggle />
-							<Link
-								href="/dashboard"
-								className="text-outer_space-500 dark:text-platinum-500 hover:text-blue_munsell-500"
-							>
-								Dashboard
-							</Link>
-							<Link
-								href="/projects"
-								className="text-outer_space-500 dark:text-platinum-500 hover:text-blue_munsell-500"
-							>
-								Projects
-							</Link>
-							<Show when="signed-out">
-								<Link
-									href="/sign-in"
-									className="text-outer_space-500 dark:text-platinum-500 hover:text-blue_munsell-500"
-								>
-									Sign In
-								</Link>
-								<Link
-									href="/sign-up"
-									className="px-4 py-2 bg-blue-munsell text-white rounded-lg hover:bg-blue-munsell/90"
-								>
-									Get Started
-								</Link>
-							</Show>
-							<Show when="signed-in">
-								<UserButton />
-							</Show>
-						</div>
-					</div>
-				</div>
-			</header>
+			<Header />
 
 			{/* Hero Section */}
 			<section className="py-20 px-4 sm:px-6 lg:px-8">
