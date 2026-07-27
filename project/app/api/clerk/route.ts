@@ -1,5 +1,4 @@
 import type { WebhookEvent } from "@clerk/nextjs/server";
-import { headers } from "next/headers";
 import type { NextRequest } from "next/server";
 import { Webhook } from "svix";
 import {
@@ -55,11 +54,15 @@ export async function POST(req: NextRequest) {
 				event.data;
 			const primaryEmail = email_addresses[0]?.email_address;
 
+			if (!first_name || !last_name)
+				return new Response("Missing name details", { status: 400 });
+
 			try {
 				const user = await createUser({
 					clerkId: id,
 					email: primaryEmail,
-					name: `${first_name} ${last_name}`,
+					firstName: first_name,
+					lastName: last_name,
 					profilePic: image_url,
 				});
 
@@ -79,10 +82,14 @@ export async function POST(req: NextRequest) {
 				event.data;
 			const primaryEmail = email_addresses[0]?.email_address;
 
+			if (!first_name || !last_name)
+				return new Response("Missing name details", { status: 400 });
+
 			try {
 				const user = await updateUserByClerkId(id, {
 					email: primaryEmail,
-					name: `${first_name} ${last_name}`,
+					firstName: first_name,
+					lastName: last_name,
 					profilePic: image_url,
 				});
 

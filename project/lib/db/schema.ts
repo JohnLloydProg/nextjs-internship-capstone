@@ -1,9 +1,11 @@
 import { defineRelations } from "drizzle-orm";
 import {
+	boolean,
 	index,
 	integer,
 	pgEnum,
 	pgTable,
+	primaryKey,
 	text,
 	timestamp,
 	uuid,
@@ -17,21 +19,41 @@ export const priorityEnum = pgEnum("priority", [
 	"urgent",
 ]);
 
+export const projectStatusEnum = pgEnum("project_status", [
+	"active",
+	"paused",
+	"closed",
+]);
+
+export const roles = pgTable("roles", {
+	id: uuid("id").primaryKey().defaultRandom(),
+	name: varchar("name", { length: 255 }).notNull(),
+	accessLevel: integer("access_level").notNull(),
+	createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const users = pgTable(
 	"users",
 	{
 		id: uuid("id").primaryKey().defaultRandom(),
 		clerkId: text("clerk_id").notNull().unique(),
 		email: text("email").notNull().unique(),
-		name: text("name").notNull(),
+		firstName: text("first_name").notNull(),
+		lastName: text("last_name").notNull(),
 		profilePic: text("profile_pic"),
+		roleId: uuid("role_id").references(() => roles.id, {
+			onDelete: "set null",
+		}),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at")
 			.defaultNow()
 			.notNull()
 			.$onUpdate(() => new Date()),
 	},
-	(t) => [index("users_clerk_id_idx").on(t.clerkId)],
+	(t) => [
+		index("users_clerk_id_idx").on(t.clerkId),
+		index("users_role_id_idx").on(t.roleId),
+	],
 );
 
 export const projects = pgTable(
@@ -43,6 +65,7 @@ export const projects = pgTable(
 		ownerId: uuid("owner_id")
 			.notNull()
 			.references(() => users.id, { onDelete: "cascade" }),
+		status: projectStatusEnum("status").default("active"),
 		dueDate: timestamp("due_date"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at")
@@ -51,6 +74,25 @@ export const projects = pgTable(
 			.$onUpdate(() => new Date()),
 	},
 	(t) => [index("projects_owner_id_idx").on(t.ownerId)],
+);
+
+export const assignments = pgTable(
+	"assignments",
+	{
+		projectId: uuid("project_id")
+			.notNull()
+			.references(() => projects.id, { onDelete: "cascade" }),
+		userId: uuid("user_id")
+			.notNull()
+			.references(() => users.id, { onDelete: "cascade" }),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+	},
+	(t) => [
+		primaryKey({ columns: [t.projectId, t.userId] }),
+		index("post_categories_project_id_idx").on(t.projectId),
+		index("post_categories_user_id_idx").on(t.userId),
+		index("post_categories_composite_idx").on(t.projectId, t.userId),
+	],
 );
 
 export const lists = pgTable(
@@ -62,6 +104,7 @@ export const lists = pgTable(
 			.notNull()
 			.references(() => projects.id, { onDelete: "cascade" }),
 		position: integer("position").notNull(),
+		suggestedLimit: integer("suggested_limit"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at")
 			.defaultNow()
@@ -86,6 +129,8 @@ export const tasks = pgTable(
 		priority: priorityEnum("priority").default("medium"),
 		dueDate: timestamp("due_date"),
 		position: integer("position").notNull(),
+		startedAt: timestamp("stated_at"),
+		finishedAt: timestamp("finished_at"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at")
 			.defaultNow()
@@ -121,21 +166,67 @@ export const comments = pgTable(
 	],
 );
 
+export const notifications = pgTable(
+	"notifications",
+	{
+		id: uuid("id").primaryKey().defaultRandom(),
+		receiverId: uuid("received_id")
+			.notNull()
+			.references(() => users.id, { onDelete: "cascade" }),
+		title: varchar("title", { length: 500 }).notNull(),
+		description: text("description"),
+		link: text("link").notNull(),
+		isRead: boolean("is_read").notNull().default(false),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+	},
+	(t) => [index("notifications_receiver_id_idx").on(t.receiverId)],
+);
+
 export const relations = defineRelations(
-	{ users, projects, lists, tasks, comments },
+	{
+		users,
+		projects,
+		lists,
+		tasks,
+		comments,
+		roles,
+		notifications,
+		assignments,
+	},
 	(r) => ({
 		projects: {
 			owner: r.one.users({
 				from: r.projects.ownerId,
 				to: r.users.id,
 				optional: false,
+				alias: "ownership_relation",
 			}),
 			lists: r.many.lists(),
+			members: r.many.users({
+				from: r.projects.id.through(r.assignments.projectId),
+				to: r.users.id.through(r.assignments.userId),
+				alias: "assignment_relation",
+			}),
 		},
 		users: {
-			projects: r.many.projects(),
+			ownedProjects: r.many.projects({
+				from: r.users.id,
+				to: r.projects.ownerId,
+				alias: "ownership_relation",
+			}),
 			tasks: r.many.tasks(),
 			comments: r.many.comments(),
+			role: r.one.roles({
+				from: r.users.roleId,
+				to: r.roles.id,
+				optional: false,
+			}),
+			notifications: r.many.notifications(),
+			assignedProjects: r.many.projects({
+				from: r.users.id.through(r.assignments.userId),
+				to: r.projects.id.through(r.assignments.projectId),
+				alias: "assignment_relation",
+			}),
 		},
 		lists: {
 			project: r.one.projects({
@@ -166,6 +257,13 @@ export const relations = defineRelations(
 			}),
 			author: r.one.users({
 				from: r.comments.authorId,
+				to: r.users.id,
+				optional: false,
+			}),
+		},
+		notifications: {
+			receiver: r.one.users({
+				from: r.notifications.receiverId,
 				to: r.users.id,
 				optional: false,
 			}),
