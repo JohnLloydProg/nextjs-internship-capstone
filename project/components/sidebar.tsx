@@ -66,7 +66,7 @@ export default function SidebarNav() {
 							className={`flex items-center gap-3 px-6 py-3 transition-all ${
 								isActive
 									? "border-l-4 border-primary bg-linear-to-r from-[#9E7F1F] to-[#D1B252] text-white font-medium"
-									: "text-zinc-400 hover:text-white hover:bg-white/5"
+									: "text-muted-foreground hover:text-white hover:bg-white/5"
 							}`}
 						>
 							<Icon className="w-5 h-5" strokeWidth={isActive ? 2.5 : 2} />
