@@ -1,5 +1,4 @@
 import { eq } from "drizzle-orm";
-import type { User } from "@/types/index";
 import { db } from "..";
 import { users } from "../schema";
 
@@ -8,7 +7,7 @@ export type UpdateUser = Partial<
 	Omit<NewUser, "id" | "clerkId" | "createdAt" | "updatedAt">
 >;
 
-export async function createUser(userData: NewUser): Promise<User> {
+export async function createUser(userData: NewUser) {
 	const [newUser] = await db.insert(users).values(userData).returning();
 	return newUser;
 }
@@ -16,7 +15,7 @@ export async function createUser(userData: NewUser): Promise<User> {
 export async function updateUserByClerkId(
 	clerkId: string,
 	updateData: UpdateUser,
-): Promise<User | null> {
+) {
 	const [updatedUser] = await db
 		.update(users)
 		.set(updateData)

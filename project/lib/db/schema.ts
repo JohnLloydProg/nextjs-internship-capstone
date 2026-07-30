@@ -65,7 +65,7 @@ export const projects = pgTable(
 		ownerId: uuid("owner_id")
 			.notNull()
 			.references(() => users.id, { onDelete: "cascade" }),
-		status: projectStatusEnum("status").default("active"),
+		status: projectStatusEnum("status").default("active").notNull(),
 		dueDate: timestamp("due_date"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at")
@@ -126,7 +126,7 @@ export const tasks = pgTable(
 		assigneeId: uuid("assignee_id").references(() => users.id, {
 			onDelete: "set null",
 		}),
-		priority: priorityEnum("priority").default("medium"),
+		priority: priorityEnum("priority").default("medium").notNull(),
 		dueDate: timestamp("due_date"),
 		position: integer("position").notNull(),
 		startedAt: timestamp("stated_at"),

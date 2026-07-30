@@ -1,12 +1,21 @@
 // TypeScript type definitions
 // Task 1.3: Set up project structure and folder organization
 
+export interface Role {
+	id: string;
+	name: string;
+	accessLevel: number;
+	createdAt: Date;
+}
+
 export interface User {
 	id: string;
 	clerkId: string;
 	email: string;
-	name: string;
+	firstName: string;
+	lastName: string;
 	profilePic: string | null;
+	role: Role;
 	createdAt: Date;
 	updatedAt: Date;
 }
@@ -14,11 +23,13 @@ export interface User {
 export interface Project {
 	id: string;
 	name: string;
-	description?: string;
-	ownerId: string;
+	description: string | null;
+	owner: User;
+	members: User[];
+	status: string;
 	createdAt: Date;
 	updatedAt: Date;
-	dueDate?: Date;
+	dueDate: Date | null;
 	lists: List[];
 }
 
@@ -27,6 +38,7 @@ export interface List {
 	name: string;
 	projectId: string;
 	position: number;
+	suggestedLimit: number | null;
 	createdAt: Date;
 	updatedAt: Date;
 	tasks: Task[];
@@ -35,22 +47,33 @@ export interface List {
 export interface Task {
 	id: string;
 	title: string;
-	description?: string;
+	description: string | null;
 	listId: string;
-	assigneeId?: string;
+	assignee: Omit<User, "role"> | null;
 	priority: "low" | "medium" | "high" | "urgent";
-	dueDate?: Date;
+	dueDate: Date | null;
 	position: number;
+	startedAt: Date | null;
+	finishedAt: Date | null;
 	createdAt: Date;
 	updatedAt: Date;
-	comments: Comment[];
 }
 
 export interface Comment {
 	id: string;
 	content: string;
 	taskId: string;
-	authorId: string;
+	author: User;
 	createdAt: Date;
 	updatedAt: Date;
+}
+
+export interface Notification {
+	id: string;
+	receiverId: string;
+	title: string;
+	description: string;
+	link: string;
+	isRead: boolean;
+	createdAt: Date;
 }
