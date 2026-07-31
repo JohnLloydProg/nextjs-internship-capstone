@@ -52,6 +52,7 @@ export async function getProjects(
 				{
 					assignments: {
 						userId: userId,
+						accepted: true,
 					},
 				},
 			],
@@ -69,9 +70,6 @@ export async function getProjects(
 		with: {
 			owner: true,
 			assignments: {
-				where: {
-					accepted: true,
-				},
 				with: {
 					user: true,
 				},
