@@ -1,13 +1,12 @@
 "use client";
 
-import { Plus, X } from "lucide-react";
-import { useActionState, useEffect, useState } from "react";
+import { Plus } from "lucide-react";
+import { useActionState, useState } from "react";
 import { CreateProjectAction } from "@/lib/actions/projects";
 import { FormMessage } from "./formMessage";
 import { Button } from "./ui/button";
 import {
 	Dialog,
-	DialogClose,
 	DialogContent,
 	DialogDescription,
 	DialogHeader,
@@ -20,16 +19,10 @@ import { Textarea } from "./ui/textarea";
 
 export function CreateProjectButton() {
 	const [isOpen, setIsOpen] = useState(false);
-	const [state, formAction, isLoading] = useActionState(
+	const [state, formAction, _isLoading] = useActionState(
 		CreateProjectAction,
 		null,
 	);
-
-	useEffect(() => {
-		if (state?.success) {
-			setIsOpen(false);
-		}
-	});
 
 	return (
 		<Dialog open={isOpen} onOpenChange={setIsOpen}>

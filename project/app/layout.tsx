@@ -36,7 +36,7 @@ export default function RootLayout({
 				jetbrainsMonoHeading.variable,
 			)}
 		>
-			<body className={inter.className}>
+			<body className={`${inter.className} overflow-x-hidden`}>
 				<ClerkProvider appearance={{ theme: shadcn }}>{children}</ClerkProvider>
 			</body>
 		</html>

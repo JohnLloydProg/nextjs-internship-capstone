@@ -25,12 +25,10 @@ export interface Project {
 	name: string;
 	description: string | null;
 	owner: User;
-	members: User[];
 	status: string;
 	createdAt: Date;
 	updatedAt: Date;
 	dueDate: Date | null;
-	lists: List[];
 }
 
 export interface List {

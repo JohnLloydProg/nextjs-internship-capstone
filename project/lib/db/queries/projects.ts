@@ -7,38 +7,23 @@ type ProjectDetail = typeof projects.$inferSelect;
 export async function getProjectById(
 	projectId: string,
 ): Promise<Project | undefined> {
-	return await db.query.projects.findFirst({
-		where: {
-			id: projectId,
-		},
-		with: {
-			owner: {
-				with: {
-					role: true,
-				},
+	try {
+		return await db.query.projects.findFirst({
+			where: {
+				id: projectId,
 			},
-			members: {
-				with: {
-					role: true,
-				},
-			},
-			lists: {
-				orderBy: {
-					position: "asc",
-				},
-				with: {
-					tasks: {
-						orderBy: {
-							position: "asc",
-						},
-						with: {
-							assignee: true,
-						},
+			with: {
+				owner: {
+					with: {
+						role: true,
+						notifications: false,
 					},
 				},
 			},
-		},
-	});
+		});
+	} catch (_error) {
+		return undefined;
+	}
 }
 
 interface GetProjectsOptions {

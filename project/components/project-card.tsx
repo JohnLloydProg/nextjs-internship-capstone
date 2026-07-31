@@ -1,5 +1,6 @@
 import Image from "next/image";
 import type { ProjectWithMembers } from "@/lib/db/queries/projects";
+import Link from "next/link";
 
 /*
 TODO: Implementation Notes for Interns:
@@ -50,7 +51,10 @@ export function ProjectCard({ project }: { project: ProjectWithMembers }) {
 	};
 
 	return (
-		<div className="w-85 h-56 bg-card rounded-xl p-5 border-2 border-foreground/20 hover:border-primary shadow-md flex flex-col relative cursor-pointer">
+		<Link
+			href={`/projects/${project.id}`}
+			className="w-85 h-56 bg-card rounded-xl p-5 border-2 border-foreground/20 hover:border-primary shadow-md flex flex-col relative cursor-pointer"
+		>
 			<div className="flex items-center justify-between">
 				<h3 className="text-xl font-bold text-foreground tracking-tight">
 					{project.name}
@@ -107,6 +111,6 @@ export function ProjectCard({ project }: { project: ProjectWithMembers }) {
 					)}
 				</div>
 			</div>
-		</div>
+		</Link>
 	);
 }
