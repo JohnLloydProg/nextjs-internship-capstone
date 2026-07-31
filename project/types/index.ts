@@ -15,9 +15,13 @@ export interface User {
 	firstName: string;
 	lastName: string;
 	profilePic: string | null;
-	role: Role;
+	bio: string | null;
 	createdAt: Date;
 	updatedAt: Date;
+}
+
+export interface Member extends User {
+	role: string;
 }
 
 export interface Project {

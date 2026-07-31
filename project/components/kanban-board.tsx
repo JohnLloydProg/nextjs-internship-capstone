@@ -1,6 +1,6 @@
 "use client";
 
-import type { List, Project, User } from "@/types/index";
+import type { List, User } from "@/types/index";
 import { CreateListModal } from "@/components/create-list-button";
 import TaskCard from "@/components/task-card";
 import { CreateTaskModal } from "@/components/create-task-button";

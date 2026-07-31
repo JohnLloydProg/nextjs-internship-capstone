@@ -13,12 +13,7 @@ export async function getProjectById(
 				id: projectId,
 			},
 			with: {
-				owner: {
-					with: {
-						role: true,
-						notifications: false,
-					},
-				},
+				owner: true,
 			},
 		});
 	} catch (_error) {
@@ -55,8 +50,8 @@ export async function getProjects(
 					ownerId: userId,
 				},
 				{
-					members: {
-						id: userId,
+					assignments: {
+						userId: userId,
 					},
 				},
 			],
@@ -72,9 +67,20 @@ export async function getProjects(
 		},
 		orderBy: { updatedAt: newest ? "desc" : "asc" },
 		with: {
-			members: true,
+			owner: true,
+			assignments: {
+				where: {
+					accepted: true,
+				},
+				with: {
+					user: true,
+				},
+			},
 		},
 	});
 
-	return projectList;
+	return projectList.map((project) => ({
+		members: project.assignments.map((assignment) => assignment.user),
+		...project,
+	}));
 }

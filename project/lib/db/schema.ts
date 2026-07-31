@@ -25,6 +25,12 @@ export const projectStatusEnum = pgEnum("project_status", [
 	"closed",
 ]);
 
+export const assginmentRole = pgEnum("assignment_role", [
+	"editor",
+	"commenter",
+	"viewer",
+]);
+
 export const roles = pgTable("roles", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	name: varchar("name", { length: 255 }).notNull(),
@@ -41,19 +47,14 @@ export const users = pgTable(
 		firstName: text("first_name").notNull(),
 		lastName: text("last_name").notNull(),
 		profilePic: text("profile_pic"),
-		roleId: uuid("role_id").references(() => roles.id, {
-			onDelete: "set null",
-		}),
+		bio: text("bio"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at")
 			.defaultNow()
 			.notNull()
 			.$onUpdate(() => new Date()),
 	},
-	(t) => [
-		index("users_clerk_id_idx").on(t.clerkId),
-		index("users_role_id_idx").on(t.roleId),
-	],
+	(t) => [index("users_clerk_id_idx").on(t.clerkId)],
 );
 
 export const projects = pgTable(
@@ -85,13 +86,15 @@ export const assignments = pgTable(
 		userId: uuid("user_id")
 			.notNull()
 			.references(() => users.id, { onDelete: "cascade" }),
+		role: assginmentRole("role_id").default("viewer").notNull(),
+		accepted: boolean("accepted").default(false).notNull(),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
 	(t) => [
 		primaryKey({ columns: [t.projectId, t.userId] }),
-		index("post_categories_project_id_idx").on(t.projectId),
-		index("post_categories_user_id_idx").on(t.userId),
-		index("post_categories_composite_idx").on(t.projectId, t.userId),
+		index("assignments_project_id_idx").on(t.projectId),
+		index("assignments_user_id_idx").on(t.userId),
+		index("assignments_composite_idx").on(t.projectId, t.userId),
 	],
 );
 
@@ -202,11 +205,7 @@ export const relations = defineRelations(
 				alias: "ownership_relation",
 			}),
 			lists: r.many.lists(),
-			members: r.many.users({
-				from: r.projects.id.through(r.assignments.projectId),
-				to: r.users.id.through(r.assignments.userId),
-				alias: "assignment_relation",
-			}),
+			assignments: r.many.assignments(),
 		},
 		users: {
 			ownedProjects: r.many.projects({
@@ -216,17 +215,7 @@ export const relations = defineRelations(
 			}),
 			tasks: r.many.tasks(),
 			comments: r.many.comments(),
-			role: r.one.roles({
-				from: r.users.roleId,
-				to: r.roles.id,
-				optional: false,
-			}),
-			notifications: r.many.notifications(),
-			assignedProjects: r.many.projects({
-				from: r.users.id.through(r.assignments.userId),
-				to: r.projects.id.through(r.assignments.projectId),
-				alias: "assignment_relation",
-			}),
+			assignments: r.many.assignments(),
 		},
 		lists: {
 			project: r.one.projects({
@@ -264,6 +253,18 @@ export const relations = defineRelations(
 		notifications: {
 			receiver: r.one.users({
 				from: r.notifications.receiverId,
+				to: r.users.id,
+				optional: false,
+			}),
+		},
+		assignments: {
+			project: r.one.projects({
+				from: r.assignments.projectId,
+				to: r.projects.id,
+				optional: false,
+			}),
+			user: r.one.users({
+				from: r.assignments.userId,
 				to: r.users.id,
 				optional: false,
 			}),

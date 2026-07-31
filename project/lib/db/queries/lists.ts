@@ -13,11 +13,7 @@ export async function getListsByProjectId(projectId: string): Promise<List[]> {
 			tasks: {
 				orderBy: { position: "asc" },
 				with: {
-					assignee: {
-						with: {
-							role: false,
-						},
-					},
+					assignee: true,
 				},
 			},
 		},

@@ -1,5 +1,8 @@
 import { ProjectCard } from "@/components/project-card";
 import { getProjects } from "@/lib/db/queries/projects";
+import { getUserByClerkId } from "@/lib/db/queries/users";
+import { auth } from "@clerk/nextjs/server";
+import { notFound, redirect } from "next/navigation";
 
 export function ProjectGridSkeleton() {
 	return (
@@ -23,8 +26,15 @@ export default async function ProjectGrid({
 	search?: string;
 	newest?: boolean;
 }) {
+	const { userId } = await auth();
+	if (!userId) return redirect("/sign-in");
+
+	const user = await getUserByClerkId(userId);
+	if (!user) notFound();
+
 	const projects = await getProjects({
 		status: status,
+		userId: user.id,
 		newest: newest,
 		search: search,
 	});

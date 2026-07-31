@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db } from "..";
-import { projects } from "../schema";
+import { assignments, projects } from "../schema";
 
 type NewProject = typeof projects.$inferInsert;
 type UpdateProject = Partial<
@@ -29,4 +29,18 @@ export async function deleteProject(projectId: string) {
 		.returning();
 
 	return deletedProject;
+}
+
+type NewAssignment = typeof assignments.$inferInsert;
+
+export async function createAssignment(data: NewAssignment) {
+	const [newAssignment] = await db
+		.insert(assignments)
+		.values(data)
+		.onConflictDoNothing({
+			target: [assignments.projectId, assignments.userId],
+		})
+		.returning();
+
+	return newAssignment;
 }
