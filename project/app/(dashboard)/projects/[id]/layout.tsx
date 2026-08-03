@@ -1,10 +1,10 @@
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { getProjectById } from "@/lib/db/queries/projects";
 import { notFound } from "next/navigation";
 import type React from "react";
-import { Button } from "@/components/ui/button";
 import ProjectNavBar from "@/components/project-nav";
+import { Button } from "@/components/ui/button";
+import { getProjectById } from "@/lib/db/queries/projects";
 
 export default async function ProjectPage({
 	params,

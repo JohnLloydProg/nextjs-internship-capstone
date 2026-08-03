@@ -1,6 +1,6 @@
 import Image from "next/image";
-import type { ProjectWithMembers } from "@/lib/db/queries/projects";
 import Link from "next/link";
+import type { ProjectWithMembers } from "@/lib/db/queries/projects";
 
 /*
 TODO: Implementation Notes for Interns:

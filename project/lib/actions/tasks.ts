@@ -1,12 +1,12 @@
 "use server";
 
-import { z } from "zod";
-import { revalidatePath } from "next/cache";
-import type { FormState } from "./projects";
-import { createTask, deleteTask, updateTask } from "../db/mutations/tasks";
-import { User } from "@/types/index";
 import { auth } from "@clerk/nextjs/server";
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
+import type { User } from "@/types/index";
+import { createTask, deleteTask, updateTask } from "../db/mutations/tasks";
 import { getUserByClerkId } from "../db/queries/users";
+import type { FormState } from "./projects";
 
 const createTaskSchema = z.object({
 	position: z.preprocess(
@@ -160,7 +160,6 @@ export async function deleteTaskAction(
 	projectId: string,
 	taskId: string,
 ): Promise<FormState> {
-	// Replace 'any' with your FormState type
 	const { userId } = await auth();
 	if (!userId) return { success: false, message: "Unauthorized" };
 

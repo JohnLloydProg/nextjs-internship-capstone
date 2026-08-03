@@ -29,6 +29,18 @@ export async function getMembersByProject(
 	}));
 }
 
+export async function getAssignmentByProject(projectId: string) {
+	const assignments = await db.query.assignments.findMany({
+		where: {
+			projectId: projectId,
+		},
+		with: {
+			user: true,
+		},
+	});
+	return assignments;
+}
+
 export async function getUserByEmail(email: string): Promise<User | undefined> {
 	try {
 		return await db.query.users.findFirst({
@@ -38,5 +50,21 @@ export async function getUserByEmail(email: string): Promise<User | undefined> {
 		});
 	} catch (_error) {
 		return undefined;
+	}
+}
+
+export async function userIsOwner(projectId: string, userId: string) {
+	try {
+		const project = await db.query.projects.findFirst({
+			where: {
+				id: projectId,
+				owner: {
+					clerkId: userId,
+				},
+			},
+		});
+		return !!project;
+	} catch (_error) {
+		return false;
 	}
 }

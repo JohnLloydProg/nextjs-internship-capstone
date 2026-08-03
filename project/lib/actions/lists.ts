@@ -1,9 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { createList, deleteList, updateList } from "../db/mutations/lists";
 import type { FormState } from "./projects";
-import { z } from "zod";
 
 const createListSchema = z.object({
 	name: z.string().min(3).max(30, "Limit characters to 30 only"),

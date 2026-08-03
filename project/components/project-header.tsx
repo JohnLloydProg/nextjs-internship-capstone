@@ -1,6 +1,6 @@
 import { Calendar, MoreHorizontal, Settings, Users } from "lucide-react";
 
-export function ProjectHeader({ projectId }: { projectId: string }) {
+export function ProjectHeader({ _projectId }: { _projectId: string }) {
 	return (
 		<div className="bg-white dark:bg-outer_space-500 rounded-lg border border-french_gray-300 dark:border-payne's_gray-400 p-6">
 			<div className="flex items-start justify-between">

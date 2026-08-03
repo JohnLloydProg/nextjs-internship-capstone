@@ -1,20 +1,20 @@
 "use client";
 
 import { Plus } from "lucide-react";
+import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
+	DialogClose,
 	DialogContent,
 	DialogDescription,
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
-	DialogClose,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
 	Select,
 	SelectContent,
@@ -22,10 +22,10 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { useActionState } from "react";
+import { Textarea } from "@/components/ui/textarea";
 import { createTaskAction } from "@/lib/actions/tasks";
-import { FormMessage } from "./formMessage";
 import type { Project, User } from "../types/index";
+import { FormMessage } from "./formMessage";
 
 export function CreateTaskModal({
 	projectId,

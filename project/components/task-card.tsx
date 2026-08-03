@@ -1,22 +1,21 @@
 "use client";
 
-import Image from "next/image";
-import type { Project, Task, User } from "../types/index";
 import { MoreHorizontal, Trash2 } from "lucide-react";
+import Image from "next/image";
+import { useActionState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
 	Dialog,
+	DialogClose,
 	DialogContent,
 	DialogDescription,
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
-	DialogClose,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
 	Select,
 	SelectContent,
@@ -24,8 +23,9 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { useActionState, useTransition } from "react";
+import { Textarea } from "@/components/ui/textarea";
 import { deleteTaskAction, updateTaskAction } from "@/lib/actions/tasks";
+import type { Task, User } from "../types/index";
 
 /*
 TODO: Implementation Notes for Interns:
@@ -253,7 +253,6 @@ export default function TaskCard({
 }) {
 	return (
 		<div className="group/card p-5 rounded-lg border bg-card shadow-sm flex flex-col gap-4 hover:border-primary border-border cursor-pointer transition-colors relative group">
-			{/* Header Row: Title, Priority, Menu */}
 			<div className="flex items-start justify-between gap-3">
 				<span className="font-bold text-foreground text-base tracking-tight leading-snug pt-1">
 					{task.title}
@@ -270,14 +269,12 @@ export default function TaskCard({
 				</div>
 			</div>
 
-			{/* Description Row */}
 			{task.description && (
 				<p className="text-sm text-muted-foreground leading-snug line-clamp-2">
 					{task.description}
 				</p>
 			)}
 
-			{/* Footer Row: Date & Assignee */}
 			<div className="flex justify-between mt-auto items-center pt-2">
 				<span className="text-sm font-medium text-foreground">
 					{task.dueDate

@@ -1,14 +1,14 @@
 "use client";
 
-import type { List, User } from "@/types/index";
-import { CreateListModal } from "@/components/create-list-button";
-import TaskCard from "@/components/task-card";
-import { CreateTaskModal } from "@/components/create-task-button";
 import { Trash2 } from "lucide-react";
+import { type KeyboardEvent, useState, useTransition } from "react";
+import { CreateListModal } from "@/components/create-list-button";
+import { CreateTaskModal } from "@/components/create-task-button";
+import TaskCard from "@/components/task-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { KeyboardEvent, useState, useTransition } from "react";
 import { deleteListAction, updateListAction } from "@/lib/actions/lists";
+import type { List, User } from "@/types/index";
 
 // TODO: Task 5.1 - Design responsive Kanban board layout
 // TODO: Task 5.2 - Implement drag-and-drop functionality with dnd-kit
