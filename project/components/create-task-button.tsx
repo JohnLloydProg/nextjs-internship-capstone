@@ -39,7 +39,10 @@ export function CreateTaskModal({
 	position: number;
 }) {
 	const [state, formAction, _isLoading] = useActionState(
-		createTaskAction.bind("", projectId).bind("", listId).bind(0, position),
+		createTaskAction
+			.bind(null, projectId)
+			.bind(null, listId)
+			.bind(null, position),
 		null,
 	);
 

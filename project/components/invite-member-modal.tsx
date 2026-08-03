@@ -27,7 +27,7 @@ import { FormMessage } from "./formMessage";
 
 export function InviteMemberModal({ projectId }: { projectId: string }) {
 	const [state, formAction, _isLoading] = useActionState(
-		inviteMemberAction.bind("", projectId),
+		inviteMemberAction.bind(null, projectId),
 		null,
 	);
 

@@ -54,7 +54,7 @@ export function BoardColumn({
 	projectId: string;
 	members: User[];
 }) {
-	const [isLoading, startTransition] = useTransition();
+	const [_isLoading, startTransition] = useTransition();
 	const [isEditingTitle, setIsEditingTitle] = useState(false);
 	const [titleValue, setTitleValue] = useState(list.name);
 

@@ -31,7 +31,7 @@ export function CreateListModal({
 	position: number;
 }) {
 	const [state, formAction, _isLoading] = useActionState(
-		CreateListAction.bind("", projectId).bind(0, position),
+		CreateListAction.bind(null, projectId).bind(null, position),
 		null,
 	);
 

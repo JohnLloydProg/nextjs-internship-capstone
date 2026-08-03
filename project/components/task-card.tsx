@@ -74,7 +74,7 @@ export function TaskMenuButton({
 	members: User[];
 }) {
 	const [state, formAction, _isLoading] = useActionState(
-		updateTaskAction.bind("", projectId).bind("", task.id),
+		updateTaskAction.bind(null, projectId).bind(null, task.id),
 		null,
 	);
 	const [isLoading, startTranstion] = useTransition();
