@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "..";
-import { users } from "../schema";
+import { assignments, users } from "../schema";
 
 export type NewUser = typeof users.$inferInsert;
 export type UpdateUser = Partial<
@@ -32,4 +32,17 @@ export async function deleteUserByClerkId(clerkId: string) {
 		.returning();
 
 	return deletedUser ?? null;
+}
+
+export async function deleteAssignmentByCompositeID(
+	projectId: string,
+	userId: string,
+) {
+	const [deletedAssignment] = await db
+		.delete(assignments)
+		.where(
+			and(eq(assignments.projectId, projectId), eq(assignments.userId, userId)),
+		)
+		.returning();
+	return deletedAssignment ?? null;
 }
