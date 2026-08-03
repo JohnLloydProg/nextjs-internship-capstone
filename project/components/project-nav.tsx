@@ -20,7 +20,7 @@ export default function ProjectNavBar({ projectId }: { projectId: string }) {
 	console.log(pathName);
 
 	return (
-		<div className="flex items-center gap-2 pt-2">
+		<div className="flex items-center gap-2">
 			{navigations.map((nav) => (
 				<Link
 					key={nav.content}

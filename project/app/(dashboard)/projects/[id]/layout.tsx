@@ -66,23 +66,24 @@ export default async function ProjectPage({
 	return (
 		<div className="w-full flex flex-col gap-8 h-full">
 			<div className="flex flex-col gap-5">
-				<div className="flex items-center gap-3 text-4xl font-bold tracking-tight">
-					<Link
-						href="/projects"
-						className="text-foreground hover:opacity-80 transition-opacity"
-					>
-						Projects
-					</Link>
-					<ChevronRight
-						className="w-6 h-6 text-muted-foreground"
-						strokeWidth={2.5}
-					/>
-					<span className="text-primary font-medium">{project.name}</span>
+				<div className="flex items-center justify-between">
+					<div className="flex items-center gap-3 text-4xl font-bold tracking-tight">
+						<Link
+							href="/projects"
+							className="text-foreground hover:opacity-80 transition-opacity"
+						>
+							Projects
+						</Link>
+						<ChevronRight
+							className="w-6 h-6 text-muted-foreground"
+							strokeWidth={2.5}
+						/>
+						<span className="text-primary font-medium">{project.name}</span>
+					</div>
+					<ProjectNavBar projectId={project.id} />
 				</div>
 
 				<p className="text-muted-foreground">{project.description}</p>
-
-				<ProjectNavBar projectId={project.id} />
 			</div>
 
 			{children}

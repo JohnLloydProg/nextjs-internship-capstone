@@ -73,11 +73,11 @@ export function TaskMenuButton({
 	projectId: string;
 	members: User[];
 }) {
-	const [state, formAction, _isLoading] = useActionState(
+	const [, formAction] = useActionState(
 		updateTaskAction.bind(null, projectId).bind(null, task.id),
 		null,
 	);
-	const [isLoading, startTranstion] = useTransition();
+	const [, startTranstion] = useTransition();
 
 	const handleMenuClick = (e: React.MouseEvent) => {
 		e.stopPropagation();

@@ -1,10 +1,15 @@
 "use server";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/dist/client/components/navigation";
 import { z } from "zod";
 import type { User } from "@/types/index";
-import { createProject } from "../db/mutations/projects";
-import { getUserByClerkId } from "../db/queries/users";
+import {
+	createProject,
+	deleteProject,
+	updateProject,
+} from "../db/mutations/projects";
+import { getUserByClerkId, userIsOwner } from "../db/queries/users";
 
 export interface FormState {
 	success: boolean;
@@ -64,4 +69,86 @@ export async function CreateProjectAction(
 	revalidatePath("/projects");
 
 	return { success: true, message: "Created the project successfully" };
+}
+
+const updateProjectSchema = z.object({
+	name: z.string().min(1, "Project name is required").max(255),
+	description: z.string().max(300, "Maximum length is 300 only").optional(),
+	status: z.enum(["active", "paused", "closed"]),
+	dueDate: z.preprocess(
+		(val) => (val === "" ? undefined : new Date(val as string)),
+		z.date().optional(),
+	),
+});
+export async function updateProjectAction(
+	projectId: string,
+	_prevState: FormState | null,
+	formData: FormData,
+): Promise<FormState> {
+	const { userId } = await auth();
+	if (!userId) return { success: false, message: "Unauthorized" };
+
+	const isOwner = await userIsOwner(projectId, userId);
+	if (!isOwner) {
+		return {
+			success: false,
+			message: "Only the project owner can edit this project",
+		};
+	}
+
+	const data = Object.fromEntries(formData.entries());
+	const validatedFields = updateProjectSchema.safeParse(data);
+
+	if (!validatedFields.success) {
+		return {
+			errors: z.flattenError(validatedFields.error).fieldErrors,
+			success: false,
+		};
+	}
+
+	try {
+		await updateProject(projectId, validatedFields.data);
+	} catch (error) {
+		console.error("Error while updating project:", error);
+		return {
+			success: false,
+			message: "Database error: Failed to update project.",
+		};
+	}
+
+	revalidatePath(`/projects/${projectId}`);
+	revalidatePath(`/projects/${projectId}/settings`);
+
+	return {
+		message: "Project updated successfully",
+		success: true,
+	};
+}
+
+export async function deleteProjectAction(
+	projectId: string,
+): Promise<FormState> {
+	const { userId } = await auth();
+	if (!userId) return { success: false, message: "Unauthorized" };
+
+	const isOwner = await userIsOwner(projectId, userId);
+	if (!isOwner) {
+		return {
+			success: false,
+			message: "Only the project owner can delete this project",
+		};
+	}
+
+	try {
+		await deleteProject(projectId);
+	} catch (error) {
+		console.error("Error while deleting project:", error);
+		return {
+			success: false,
+			message: "Database error: Failed to delete project.",
+		};
+	}
+
+	revalidatePath("/projects");
+	redirect("/projects");
 }

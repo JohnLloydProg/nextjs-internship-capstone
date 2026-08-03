@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { createTaskAction } from "@/lib/actions/tasks";
-import type { Project, User } from "../types/index";
+import type { User } from "../types/index";
 import { FormMessage } from "./formMessage";
 
 export function CreateTaskModal({

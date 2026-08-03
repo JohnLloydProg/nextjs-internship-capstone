@@ -114,7 +114,7 @@ export function BoardColumn({
 		currentLimit !== Infinity && list.tasks.length > currentLimit;
 
 	return (
-		<div className="group w-80 h-full bg-card rounded-md border border-border flex flex-col overflow-hidden">
+		<div className="group w-80 h-fit bg-card rounded-md border border-border flex flex-col overflow-hidden">
 			<div className="px-5 py-3 min-h-14 flex items-center justify-between group-hover:bg-primary/40 text-foreground bg-foreground/20 transition-colors">
 				<div className="flex-1 mr-3 min-w-0">
 					{isEditingTitle ? (
@@ -207,7 +207,7 @@ export function KanbanBoard({
 }) {
 	return (
 		<div className="flex flex-col w-full max-w-6xl overflow-x-auto scrollbar-thin">
-			<div className="flex flex-col lg:flex-row gap-6 pb-10 w-fit">
+			<div className="flex flex-col lg:flex-row gap-6 p-5 w-fit min-h-[calc(100vh-180px)]">
 				{lists.map((list) => (
 					<BoardColumn
 						key={list.id}
