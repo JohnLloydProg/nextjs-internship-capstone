@@ -25,7 +25,7 @@ export const projectStatusEnum = pgEnum("project_status", [
 	"closed",
 ]);
 
-export const assginmentRole = pgEnum("assignment_role", [
+export const assignmentRole = pgEnum("assignment_role", [
 	"editor",
 	"commenter",
 	"viewer",
@@ -46,6 +46,7 @@ export const users = pgTable(
 		email: text("email").notNull().unique(),
 		firstName: text("first_name").notNull(),
 		lastName: text("last_name").notNull(),
+		jobPosition: text("job_position"),
 		profilePic: text("profile_pic"),
 		bio: text("bio"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -86,7 +87,7 @@ export const assignments = pgTable(
 		userId: uuid("user_id")
 			.notNull()
 			.references(() => users.id, { onDelete: "cascade" }),
-		role: assginmentRole("role_id").default("viewer").notNull(),
+		role: assignmentRole("role_id").default("viewer").notNull(),
 		accepted: boolean("accepted").default(false).notNull(),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},

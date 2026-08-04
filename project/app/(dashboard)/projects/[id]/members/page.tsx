@@ -12,12 +12,13 @@ export default async function ProjectMembersPage({
 }) {
 	const { id } = await params;
 	const project = await getProjectById(id);
-	if (!project) return redirect("/projects");
+	if (!project) redirect("/projects");
 
-	const { userId } = await auth();
-	if (!userId) return redirect("/sign-in");
+	const { userId: clerkId } = await auth();
+	if (!clerkId) redirect("/sign-in");
 
-	const isOwner = await userIsOwner(id, userId);
+	const isOwner = await userIsOwner(id, clerkId);
+
 	const assignments: AssignmentWithUser[] = await getAssignmentByProject(id);
 
 	assignments.push({

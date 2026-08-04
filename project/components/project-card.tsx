@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { ProjectWithMembers } from "@/lib/db/queries/projects";
+import { getMembersByProject } from "@/lib/db/queries/users";
+import type { Project } from "@/types/index";
 
 /*
 TODO: Implementation Notes for Interns:
@@ -36,7 +37,7 @@ Features to implement:
 - Error states
 */
 
-export function ProjectCard({ project }: { project: ProjectWithMembers }) {
+export async function ProjectCard({ project }: { project: Project }) {
 	const getStatusStyles = (status: string) => {
 		switch (status) {
 			case "active":
@@ -49,6 +50,8 @@ export function ProjectCard({ project }: { project: ProjectWithMembers }) {
 				return "bg-zinc-100 text-zinc-600";
 		}
 	};
+
+	const members = await getMembersByProject(project.id);
 
 	return (
 		<Link
@@ -89,7 +92,7 @@ export function ProjectCard({ project }: { project: ProjectWithMembers }) {
 				</span>
 
 				<div className="flex -space-x-3">
-					{project.members.slice(0, 2).map((member, index) => (
+					{members.slice(0, 2).map((member, index) => (
 						<div
 							key={member.id}
 							className="w-8 h-8 rounded-full bg-zinc-300 border-2 border-primary relative z-0 overflow-clip"
@@ -104,9 +107,9 @@ export function ProjectCard({ project }: { project: ProjectWithMembers }) {
 							/>
 						</div>
 					))}
-					{project.members.length > 2 && (
+					{members.length > 2 && (
 						<div className="w-8 h-8 rounded-full bg-primary border-2 border-primary relative z-3 overflow-clip flex items-center justify-center">
-							+{project.members.length - 2}
+							+{members.length - 2}
 						</div>
 					)}
 				</div>

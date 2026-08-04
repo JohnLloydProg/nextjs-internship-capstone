@@ -7,6 +7,7 @@ export interface User {
 	email: string;
 	firstName: string;
 	lastName: string;
+	jobPosition: string | null;
 	profilePic: string | null;
 	bio: string | null;
 	createdAt: Date;
@@ -14,7 +15,7 @@ export interface User {
 }
 
 export interface Member extends User {
-	role: string;
+	role: "editor" | "commenter" | "viewer" | "owner";
 }
 
 export interface Project {

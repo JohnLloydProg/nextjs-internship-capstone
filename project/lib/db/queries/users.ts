@@ -41,6 +41,23 @@ export async function getAssignmentByProject(projectId: string) {
 	return assignments;
 }
 
+export async function getInvitesByUser(userId: string) {
+	const assignments = await db.query.assignments.findMany({
+		where: {
+			userId: userId,
+			accepted: false,
+		},
+		with: {
+			project: {
+				with: {
+					owner: true,
+				},
+			},
+		},
+	});
+	return assignments;
+}
+
 export async function getUserByEmail(email: string): Promise<User | undefined> {
 	try {
 		return await db.query.users.findFirst({
@@ -53,13 +70,13 @@ export async function getUserByEmail(email: string): Promise<User | undefined> {
 	}
 }
 
-export async function userIsOwner(projectId: string, userId: string) {
+export async function userIsOwner(projectId: string, clerkId: string) {
 	try {
 		const project = await db.query.projects.findFirst({
 			where: {
 				id: projectId,
 				owner: {
-					clerkId: userId,
+					clerkId: clerkId,
 				},
 			},
 		});

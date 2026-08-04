@@ -4,8 +4,15 @@ import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createAssignment } from "../db/mutations/projects";
-import { deleteAssignmentByCompositeID } from "../db/mutations/users";
-import { getUserByEmail } from "../db/queries/users";
+import {
+	deleteAssignmentByCompositeID,
+	updateAssignmentByCompositeID,
+} from "../db/mutations/users";
+import {
+	getUserByClerkId,
+	getUserByEmail,
+	userIsOwner,
+} from "../db/queries/users";
 import type { FormState } from "./projects";
 
 const inviteMemberSchema = z.object({
@@ -84,4 +91,74 @@ export async function removeAssignmentAction(
 		message: "Member removed successfully",
 		success: true,
 	};
+}
+
+export async function acceptInviteAction(
+	projectId: string,
+): Promise<FormState> {
+	const { userId } = await auth();
+	if (!userId) return { success: false, message: "Unauthorized" };
+
+	const user = await getUserByClerkId(userId);
+	if (!user) return { success: false, message: "User not found" };
+
+	try {
+		await updateAssignmentByCompositeID(projectId, user.id, { accepted: true });
+	} catch (error) {
+		console.error("Error while accepting invite:", error);
+		return {
+			success: false,
+			message: "Database error: Failed to accept invite.",
+		};
+	}
+
+	revalidatePath("/teams");
+	revalidatePath(`/projects/${projectId}`);
+	return { success: true, message: "Invite accepted" };
+}
+
+const updateRoleSchema = z.object({
+	role: z.enum(["editor", "commenter", "viewer"]),
+});
+
+export async function updateAssignmentRoleAction(
+	projectId: string,
+	memberId: string,
+	role: string,
+): Promise<FormState> {
+	const { userId } = await auth();
+	if (!userId) return { success: false, message: "Unauthorized" };
+
+	const isOwner = await userIsOwner(projectId, userId);
+	if (!isOwner) {
+		return {
+			success: false,
+			message: "Only the project owner can edit permissions",
+		};
+	}
+
+	const validatedFields = updateRoleSchema.safeParse({ role });
+	if (!validatedFields.success) {
+		return {
+			errors: z.flattenError(validatedFields.error).fieldErrors,
+			success: false,
+		};
+	}
+
+	try {
+		await updateAssignmentByCompositeID(projectId, memberId, {
+			role: validatedFields.data.role,
+		});
+	} catch (error) {
+		console.error("Error while updating assignment role:", error);
+		return {
+			success: false,
+			message: "Database error: Failed to update role.",
+		};
+	}
+
+	revalidatePath(`/projects/${projectId}/members`);
+	revalidatePath("/teams");
+
+	return { success: true, message: "Permissions updated" };
 }

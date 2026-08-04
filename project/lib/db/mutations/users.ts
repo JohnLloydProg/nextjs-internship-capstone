@@ -46,3 +46,18 @@ export async function deleteAssignmentByCompositeID(
 		.returning();
 	return deletedAssignment ?? null;
 }
+
+export async function updateAssignmentByCompositeID(
+	projectId: string,
+	userId: string,
+	updateData: Partial<typeof assignments.$inferInsert>,
+) {
+	const [updatedAssignment] = await db
+		.update(assignments)
+		.set(updateData)
+		.where(
+			and(eq(assignments.projectId, projectId), eq(assignments.userId, userId)),
+		)
+		.returning();
+	return updatedAssignment ?? null;
+}

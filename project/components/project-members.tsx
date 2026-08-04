@@ -1,25 +1,15 @@
 "use client";
 
-import { ChevronRight, Loader2, Trash2, XCircle } from "lucide-react";
+import { ChevronRight, EditIcon } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState, useTransition } from "react";
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-	AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { removeAssignmentAction } from "@/lib/actions/users";
-import type { Project } from "../types/index";
+import type { Project, User } from "../types/index";
 import { InviteMemberModal } from "./invite-member-modal";
+import { RemoveMemberAlert } from "./remove-member-modal";
+import EditPermissionsModal from "./modals/update-permission-modal";
+import { Button } from "./ui/button";
 
 export type AssignmentWithUser = {
 	projectId: string;
@@ -27,96 +17,8 @@ export type AssignmentWithUser = {
 	role: "editor" | "commenter" | "viewer" | "owner";
 	accepted: boolean;
 	createdAt: Date;
-	user: {
-		id: string;
-		firstName: string;
-		lastName: string;
-		email: string;
-		profilePic: string | null;
-		bio: string | null;
-	};
+	user: User;
 };
-
-function AlertModal({
-	project,
-	isOwner,
-	selected,
-}: {
-	project: Project;
-	isOwner: boolean;
-	selected: AssignmentWithUser;
-}) {
-	const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
-	const [_isLoading, startTransition] = useTransition();
-	const isPending = selected ? !selected.accepted : false;
-
-	async function handleRemoveMember(userId: string) {
-		if (!isOwner) return;
-
-		setActionLoadingId(userId);
-		startTransition(async () => {
-			if (!project.id || !userId) return;
-			await removeAssignmentAction(project.id, userId);
-			setActionLoadingId(null);
-		});
-	}
-
-	async function handleCancelInvite(userId: string) {
-		if (!isOwner) return;
-
-		setActionLoadingId(userId);
-		startTransition(async () => {
-			if (!project.id || !userId) return;
-			await removeAssignmentAction(project.id, userId);
-			setActionLoadingId(null);
-		});
-	}
-
-	return (
-		<AlertDialog>
-			<AlertDialogTrigger asChild>
-				<Button
-					variant="destructive"
-					disabled={actionLoadingId === selected.userId}
-				>
-					{actionLoadingId === selected.userId ? (
-						<Loader2 className="w-4 h-4 animate-spin" />
-					) : isPending ? (
-						<XCircle className="w-4 h-4" />
-					) : (
-						<Trash2 className="w-4 h-4" />
-					)}
-					{isPending ? "Cancel Invitation" : "Remove Member"}
-				</Button>
-			</AlertDialogTrigger>
-			<AlertDialogContent>
-				<AlertDialogHeader>
-					<AlertDialogTitle>
-						{isPending ? "Cancel this invitation?" : "Remove this member?"}
-					</AlertDialogTitle>
-					<AlertDialogDescription>
-						{isPending
-							? `This will revoke the pending invite for ${selected.user.firstName} ${selected.user.lastName}. They will no longer be able to accept it.`
-							: `${selected.user.firstName} ${selected.user.lastName} will lose access to this project. This action cannot be undone.`}
-					</AlertDialogDescription>
-				</AlertDialogHeader>
-				<AlertDialogFooter>
-					<AlertDialogCancel>Back</AlertDialogCancel>
-					<AlertDialogAction
-						className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-						onClick={() =>
-							isPending
-								? handleCancelInvite(selected.userId)
-								: handleRemoveMember(selected.userId)
-						}
-					>
-						Confirm
-					</AlertDialogAction>
-				</AlertDialogFooter>
-			</AlertDialogContent>
-		</AlertDialog>
-	);
-}
 
 export default function ProjectMembersDisplay({
 	project,
@@ -127,14 +29,18 @@ export default function ProjectMembersDisplay({
 	assignments: AssignmentWithUser[];
 	isOwner: boolean;
 }) {
+	const [isOpen, setOpen] = useState<boolean>(false);
 	const [items, setItems] = useState<AssignmentWithUser[]>(assignments);
-	const [selectedUserId, setSelectedUserId] = useState<string | null>();
+	const [selectedUserId, setSelectedUserId] = useState<string | null>(
+		project.owner.id,
+	);
 
 	useEffect(() => {
 		setItems(assignments);
 	}, [assignments]);
 
-	const selected = items.find((a) => a.userId === selectedUserId) || null;
+	const selected =
+		items.find((a) => a.userId === selectedUserId) || assignments[0];
 	const isPending = selected ? !selected.accepted : false;
 
 	return (
@@ -180,128 +86,124 @@ export default function ProjectMembersDisplay({
 			</nav>
 
 			<div className="flex-1 w-full bg-card border border-border rounded-xl shadow-sm p-8">
-				{!selected ? (
-					<div className="flex flex-col items-center justify-center h-full min-h-100 text-center">
-						<div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mb-6">
-							<Image
-								src="/placeholder-user.jpg"
-								alt="profile-pic"
-								width={80}
-								height={80}
-								className="w-full h-full object-cover"
-							/>
-						</div>
-						<h3 className="text-xl font-bold text-foreground tracking-tight mb-2">
-							No Member Selected
-						</h3>
-						<p className="text-muted-foreground max-w-sm">
-							Choose a team member from the list on the left to view their
-							profile details and role information.
-						</p>
-					</div>
-				) : (
-					<div className="animate-in fade-in duration-300">
-						<div className="flex items-start justify-between gap-6 mb-8">
-							<div className="flex items-center gap-6">
-								<div className="w-24 h-24 rounded-full border-2 border-primary bg-zinc-200 dark:bg-zinc-800 overflow-hidden shrink-0">
-									{selected.user.profilePic ? (
-										<Image
-											src={selected.user.profilePic}
-											alt={`${selected.user.firstName}'s avatar`}
-											width={96}
-											height={96}
-											className="w-full h-full object-cover"
-										/>
-									) : (
-										<div className="w-full h-full flex items-center justify-center text-muted-foreground font-semibold text-2xl">
-											{selected.user.firstName[0]}
-											{selected.user.lastName[0]}
-										</div>
+				<div className="animate-in fade-in duration-300">
+					<div className="flex items-start justify-between gap-6 mb-8">
+						<div className="flex items-center gap-6">
+							<div className="w-24 h-24 rounded-full border-2 border-primary bg-zinc-200 dark:bg-zinc-800 overflow-hidden shrink-0">
+								{selected.user.profilePic ? (
+									<Image
+										src={selected.user.profilePic}
+										alt={`${selected.user.firstName}'s avatar`}
+										width={96}
+										height={96}
+										className="w-full h-full object-cover"
+									/>
+								) : (
+									<div className="w-full h-full flex items-center justify-center text-muted-foreground font-semibold text-2xl">
+										{selected.user.firstName[0]}
+										{selected.user.lastName[0]}
+									</div>
+								)}
+							</div>
+							<div>
+								<h2 className="text-2xl font-bold text-foreground tracking-tight">
+									{selected.user.firstName} {selected.user.lastName}
+								</h2>
+								<div className="flex items-center gap-2 mt-1">
+									<p className="text-primary font-medium">
+										{selected.user.jobPosition?.toUpperCase() ||
+											"NO JOB POSITION"}
+									</p>
+									{isPending && (
+										<Badge variant="outline" className="text-xs">
+											Pending invite
+										</Badge>
 									)}
 								</div>
-								<div>
-									<h2 className="text-2xl font-bold text-foreground tracking-tight">
-										{selected.user.firstName} {selected.user.lastName}
-									</h2>
-									<div className="flex items-center gap-2 mt-1">
-										<p className="text-primary font-medium">
-											{selected.role.toUpperCase()}
-										</p>
-										{isPending && (
-											<Badge variant="outline" className="text-xs">
-												Pending invite
-											</Badge>
-										)}
-									</div>
-								</div>
 							</div>
-							{isOwner && selected.userId !== project.owner.id && (
-								<AlertModal
-									project={project}
-									isOwner={isOwner}
-									selected={selected}
-								/>
-							)}
+						</div>
+						{isOwner && selected.userId !== project.owner.id && (
+							<RemoveMemberAlert selected={selected} />
+						)}
+					</div>
+
+					<hr className="border-border mb-8" />
+
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-y-8 gap-x-6">
+						<div className="space-y-1.5">
+							<Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+								First Name
+							</Label>
+							<p className="text-foreground text-base font-medium">
+								{selected.user.firstName}
+							</p>
 						</div>
 
-						<hr className="border-border mb-8" />
+						<div className="space-y-1.5">
+							<Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+								Last Name
+							</Label>
+							<p className="text-foreground text-base font-medium">
+								{selected.user.lastName}
+							</p>
+						</div>
 
-						<div className="grid grid-cols-1 md:grid-cols-2 gap-y-8 gap-x-6">
-							<div className="space-y-1.5">
-								<Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-									First Name
-								</Label>
-								<p className="text-foreground text-base font-medium">
-									{selected.user.firstName}
-								</p>
-							</div>
+						<div className="space-y-1.5">
+							<Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+								Email Address
+							</Label>
+							<p className="text-foreground text-base font-medium">
+								{selected.user.email}
+							</p>
+						</div>
 
-							<div className="space-y-1.5">
-								<Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-									Last Name
-								</Label>
-								<p className="text-foreground text-base font-medium">
-									{selected.user.lastName}
-								</p>
-							</div>
-
-							<div className="space-y-1.5">
-								<Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-									Email Address
-								</Label>
-								<p className="text-foreground text-base font-medium">
-									{selected.user.email}
-								</p>
-							</div>
-
-							<div className="space-y-1.5">
-								<Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-									Role
-								</Label>
+						<div className="space-y-1.5">
+							<Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+								Project Permission
+							</Label>
+							<div className="flex items-center">
+								{isOwner && selected.userId !== project.owner.id && (
+									<>
+										<Button
+											variant="ghost"
+											onClick={() => {
+												setOpen(true);
+											}}
+										>
+											<EditIcon size={16} />
+										</Button>
+										<EditPermissionsModal
+											projectId={project.id}
+											open={isOpen}
+											onOpenChange={setOpen}
+											member={{ role: selected.role, ...selected.user }}
+										/>
+									</>
+								)}
 								<p className="text-foreground text-base font-medium">
 									{selected.role.toUpperCase()}
 								</p>
 							</div>
+						</div>
 
-							<div className="space-y-2 md:col-span-2 mt-2">
-								<Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-									Bio
-								</Label>
-								<div className="bg-muted/30 border border-border/50 rounded-lg p-4 min-h-30">
-									{selected.user.bio ? (
-										<p className="text-foreground leading-relaxed">
-											{selected.user.bio}
-										</p>
-									) : (
-										<p className="text-muted-foreground italic">
-											No bio provided.
-										</p>
-									)}
-								</div>
+						<div className="space-y-2 md:col-span-2 mt-2">
+							<Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+								Bio
+							</Label>
+							<div className="bg-muted/30 border border-border/50 rounded-lg p-4 min-h-30">
+								{selected.user.bio ? (
+									<p className="text-foreground leading-relaxed">
+										{selected.user.bio}
+									</p>
+								) : (
+									<p className="text-muted-foreground italic">
+										No bio provided.
+									</p>
+								)}
 							</div>
 						</div>
 					</div>
-				)}
+				</div>
 			</div>
 		</div>
 	);

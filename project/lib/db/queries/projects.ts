@@ -1,8 +1,7 @@
-import type { Project, User } from "@/types/index";
+import { and, eq } from "drizzle-orm";
+import type { Project } from "@/types/index";
 import { db } from "..";
-import type { projects } from "../schema";
-
-type ProjectDetail = typeof projects.$inferSelect;
+import { assignments, projects } from "../schema";
 
 export async function getProjectById(
 	projectId: string,
@@ -28,13 +27,9 @@ interface GetProjectsOptions {
 	newest?: boolean;
 }
 
-export interface ProjectWithMembers extends ProjectDetail {
-	members: Omit<User, "role">[];
-}
-
 export async function getProjects(
 	options?: GetProjectsOptions,
-): Promise<ProjectWithMembers[]> {
+): Promise<Project[]> {
 	const { userId, search, status, newest } = options || {};
 
 	const conditions = [];
@@ -81,4 +76,14 @@ export async function getProjects(
 		members: project.assignments.map((assignment) => assignment.user),
 		...project,
 	}));
+}
+
+export async function getProjectCountByUser(userId: string): Promise<number> {
+	const ownedCount = await db.$count(projects, eq(projects.ownerId, userId));
+	const assignedCount = await db.$count(
+		assignments,
+		and(eq(assignments.userId, userId), eq(assignments.accepted, true)),
+	);
+
+	return ownedCount + assignedCount;
 }
