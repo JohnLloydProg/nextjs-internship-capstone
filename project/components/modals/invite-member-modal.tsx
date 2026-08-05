@@ -21,7 +21,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { inviteMemberAction } from "@/lib/actions/users";
-import { FormMessage } from "./formMessage";
+import { FormMessage } from "../formMessage";
 
 export function InviteMemberModal({
 	projectId,

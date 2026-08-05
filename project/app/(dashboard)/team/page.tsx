@@ -8,10 +8,14 @@ import {
 	getInvitesByUser,
 	getMembersByProject,
 	getUserByClerkId,
+	userIsOwner,
 } from "@/lib/db/queries/users";
 import type { Project } from "@/types/index";
 import MemberCard from "./member-card";
 import TeamSectionToggle from "./team-section-toggle";
+import InviteMemberButton from "@/components/invite-member-button";
+import CreateTaskButton from "@/components/create-task-button";
+import { getListsByProjectId } from "@/lib/db/queries/lists";
 
 export default async function TeamsPage() {
 	const { userId } = await auth();
@@ -75,7 +79,15 @@ export default async function TeamsPage() {
 }
 
 async function ProjectTeamSection({ project }: { project: Project }) {
-	const members = await getMembersByProject(project.id);
+	const { userId: clerkId } = await auth();
+	if (!clerkId) redirect("/sign-in");
+
+	const isOwner = await userIsOwner(project.id, clerkId);
+
+	const [members, lists] = await Promise.all([
+		getMembersByProject(project.id),
+		getListsByProjectId(project.id),
+	]);
 	members.push({
 		role: "owner",
 		...project.owner,
@@ -90,10 +102,31 @@ async function ProjectTeamSection({ project }: { project: Project }) {
 				</h2>
 			}
 		>
-			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-				{members.map((member) => (
-					<MemberCard key={member.id} member={member} projectId={project.id} />
-				))}
+			<div className="flex flex-col gap-5">
+				{isOwner && (
+					<div className="flex items-center gap-5">
+						<InviteMemberButton
+							projectId={project.id}
+							className="w-fit"
+							variant="secondary"
+						/>
+						<CreateTaskButton
+							projectId={project.id}
+							members={members}
+							lists={lists}
+							defaultListId=""
+						/>
+					</div>
+				)}
+				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 w-full">
+					{members.map((member) => (
+						<MemberCard
+							key={member.id}
+							member={member}
+							projectId={project.id}
+						/>
+					))}
+				</div>
 			</div>
 		</TeamSectionToggle>
 	);

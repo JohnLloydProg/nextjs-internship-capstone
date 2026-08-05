@@ -1,4 +1,4 @@
-import { KanbanBoard } from "@/components/kanban-board";
+import KanbanBoard from "@/components/kanban-board";
 import { getListsByProjectId } from "@/lib/db/queries/lists";
 import { getMembersByProject } from "@/lib/db/queries/users";
 

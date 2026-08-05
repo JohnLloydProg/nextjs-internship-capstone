@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import type { List, User } from "../types/index";
 import { CreateTaskModal } from "./modals/create-task-modal";
 
-export function CreateTaskButton({
+export default function CreateTaskButton({
 	projectId,
 	members,
 	lists,

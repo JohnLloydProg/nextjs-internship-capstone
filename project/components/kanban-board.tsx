@@ -2,8 +2,8 @@
 
 import { Trash2 } from "lucide-react";
 import { type KeyboardEvent, useState, useTransition } from "react";
-import { CreateListModal } from "@/components/create-list-button";
-import { CreateTaskButton } from "@/components/create-task-button";
+import CreateListModal from "@/components/create-list-button";
+import CreateTaskButton from "@/components/create-task-button";
 import TaskCard from "@/components/task-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -193,7 +193,7 @@ export function BoardColumn({
 	);
 }
 
-export function KanbanBoard({
+export default function KanbanBoard({
 	projectId,
 	lists,
 	members,

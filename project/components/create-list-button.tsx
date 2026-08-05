@@ -23,7 +23,7 @@ export type NewList = {
 	suggestedLimit?: number | null | undefined;
 };
 
-export function CreateListModal({
+export default function CreateListModal({
 	projectId,
 	position,
 }: {
