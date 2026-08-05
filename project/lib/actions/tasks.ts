@@ -7,12 +7,9 @@ import type { User } from "@/types/index";
 import { createTask, deleteTask, updateTask } from "../db/mutations/tasks";
 import { getUserByClerkId } from "../db/queries/users";
 import type { FormState } from "./projects";
+import { getTaskCountByListId } from "../db/queries/lists";
 
 const createTaskSchema = z.object({
-	position: z.preprocess(
-		(val) => (val === "" ? undefined : Number(val)),
-		z.number().int().min(0, "Position must be a positive integer"),
-	),
 	title: z.string().min(1, "Task title is required"),
 	listId: z.string(),
 
@@ -52,8 +49,6 @@ const updateTaskSchema = z.object({
 
 export async function createTaskAction(
 	projectId: string,
-	listId: string,
-	position: number,
 	_prevState: FormState | null,
 	formData: FormData,
 ): Promise<FormState> {
@@ -70,12 +65,7 @@ export async function createTaskAction(
 	if (!user) return { success: false, message: "Can't find user" };
 
 	const data = Object.fromEntries(formData.entries());
-	console.log(data);
-	const validatedFields = createTaskSchema.safeParse({
-		listId: listId,
-		position: position,
-		...data,
-	});
+	const validatedFields = createTaskSchema.safeParse(data);
 
 	if (!validatedFields.success) {
 		return {
@@ -86,7 +76,8 @@ export async function createTaskAction(
 	}
 
 	try {
-		await createTask(validatedFields.data);
+		const position = await getTaskCountByListId(validatedFields.data.listId);
+		await createTask({ position: position, ...validatedFields.data });
 	} catch (error) {
 		console.error("Failed to create task in database:", error);
 		return {

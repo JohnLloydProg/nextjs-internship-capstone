@@ -6,10 +6,10 @@ import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import type { Project, User } from "../types/index";
-import { InviteMemberModal } from "./invite-member-modal";
 import { RemoveMemberAlert } from "./remove-member-modal";
 import EditPermissionsModal from "./modals/update-permission-modal";
 import { Button } from "./ui/button";
+import InviteMemberButton from "./invite-member-button";
 
 export type AssignmentWithUser = {
 	projectId: string;
@@ -46,7 +46,7 @@ export default function ProjectMembersDisplay({
 	return (
 		<div className="flex flex-col md:flex-row gap-8 items-start w-full max-w-6xl">
 			<nav className="w-full md:w-64 shrink-0 flex flex-col gap-5 h-full">
-				{isOwner && <InviteMemberModal projectId={project.id} />}
+				{isOwner && <InviteMemberButton projectId={project.id} />}
 				<div className="w-full h-full overflow-y-auto">
 					<div className="h-fit w-full shrink-0 flex flex-col gap-2">
 						{items.map((assignment) => {

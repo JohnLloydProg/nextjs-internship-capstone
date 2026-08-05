@@ -1,6 +1,5 @@
 "use client";
 
-import { UserPlus } from "lucide-react";
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,7 +10,6 @@ import {
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
-	DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,21 +23,27 @@ import {
 import { inviteMemberAction } from "@/lib/actions/users";
 import { FormMessage } from "./formMessage";
 
-export function InviteMemberModal({ projectId }: { projectId: string }) {
+export function InviteMemberModal({
+	projectId,
+	open,
+	onOpenChange,
+}: {
+	projectId: string;
+	open: boolean;
+	onOpenChange: (open: boolean) => void;
+}) {
 	const [state, formAction, _isLoading] = useActionState(
 		inviteMemberAction.bind(null, projectId),
 		null,
 	);
 
 	return (
-		<Dialog>
-			<DialogTrigger asChild>
-				<Button>
-					<UserPlus className="w-4 h-4 mr-2" />
-					Invite Member
-				</Button>
-			</DialogTrigger>
-
+		<Dialog
+			open={open}
+			onOpenChange={(next) => {
+				onOpenChange(next);
+			}}
+		>
 			<DialogContent className="sm:max-w-107 bg-card border-border shadow-lg">
 				<DialogHeader>
 					<DialogTitle className="text-foreground text-xl tracking-tight">

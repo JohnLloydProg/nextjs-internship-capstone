@@ -1,51 +1,179 @@
-// TODO: Task 4.4 - Build task creation and editing functionality
-// TODO: Task 5.6 - Create task detail modals and editing interfaces
+"use client";
 
-/*
-TODO: Implementation Notes for Interns:
+import { useActionState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+	Dialog,
+	DialogClose,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { createTaskAction } from "@/lib/actions/tasks";
+import type { List, User } from "@/types/index";
+import { FormMessage } from "../formMessage";
 
-Modal for creating and editing tasks.
+export function CreateTaskModal({
+	projectId,
+	members,
+	lists,
+	defaultListId,
+	open,
+	onOpenChange,
+}: {
+	projectId: string;
+	members: User[];
+	lists: List[];
+	defaultListId: string;
+	open: boolean;
+	onOpenChange: (open: boolean) => void;
+}) {
+	const [state, formAction, _isLoading] = useActionState(
+		createTaskAction.bind(null, projectId),
+		null,
+	);
 
-Features to implement:
-- Task title and description
-- Priority selection
-- Assignee selection
-- Due date picker
-- Labels/tags
-- Attachments
-- Comments section (for edit mode)
-- Activity history (for edit mode)
-
-Form fields:
-- Title (required)
-- Description (rich text editor)
-- Priority (low/medium/high)
-- Assignee (team member selector)
-- Due date (date picker)
-- Labels (tag input)
-- Attachments (file upload)
-
-Integration:
-- Use task validation schema
-- Call task creation/update API
-- Update board state optimistically
-- Handle file uploads
-- Real-time updates for comments
-*/
-
-export function CreateTaskModal() {
 	return (
-		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-			<div className="bg-white dark:bg-outer_space-500 rounded-lg p-6 w-full max-w-2xl mx-4">
-				<h3 className="text-lg font-semibold text-outer_space-500 dark:text-platinum-500 mb-4">
-					TODO: Create/Edit Task Modal
-				</h3>
-				<div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded border border-yellow-200 dark:border-yellow-800">
-					<p className="text-sm text-yellow-800 dark:text-yellow-200">
-						📋 Implement task creation/editing form with rich features
-					</p>
-				</div>
-			</div>
-		</div>
+		<Dialog open={open} onOpenChange={(next) => onOpenChange(next)}>
+			<DialogContent className="sm:max-w-125 bg-card border-border shadow-lg">
+				<DialogHeader>
+					<DialogTitle className="text-foreground text-xl tracking-tight">
+						New Task
+					</DialogTitle>
+					<DialogDescription className="text-muted-foreground">
+						Fill in the details below to add a new task to your board.
+					</DialogDescription>
+				</DialogHeader>
+
+				<FormMessage state={state} />
+
+				<form action={formAction} className="grid gap-5 mt-4">
+					<div className="space-y-2">
+						<Label htmlFor="title" className="text-foreground font-semibold">
+							Task Title <span className="text-destructive">*</span>
+						</Label>
+						<Input
+							id="title"
+							name="title"
+							placeholder="e.g., Update landing page hero"
+							required
+						/>
+					</div>
+
+					<div className="space-y-2">
+						<Label
+							htmlFor="description"
+							className="flex items-center justify-between text-foreground font-semibold"
+						>
+							Description
+							<span className="text-xs text-muted-foreground font-normal">
+								Optional
+							</span>
+						</Label>
+						<Textarea
+							id="description"
+							name="description"
+							placeholder="Add more details about this task..."
+							className="resize-none h-20"
+						/>
+					</div>
+
+					<div className="space-y-2">
+						<Label className="text-foreground font-semibold">
+							List <span className="text-destructive">*</span>
+						</Label>
+						<Select name="listId" defaultValue={defaultListId} required>
+							<SelectTrigger className="w-full">
+								<SelectValue placeholder="Select a list" />
+							</SelectTrigger>
+							<SelectContent>
+								{lists.map((list) => (
+									<SelectItem key={list.id} value={list.id}>
+										{list.name}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					</div>
+
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+						<div className="space-y-2">
+							<Label className="text-foreground font-semibold">Priority</Label>
+							<Select defaultValue="medium" name="priority">
+								<SelectTrigger className="w-full">
+									<SelectValue placeholder="Select priority" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="urgent">Urgent</SelectItem>
+									<SelectItem value="high">High</SelectItem>
+									<SelectItem value="medium">Medium</SelectItem>
+									<SelectItem value="low">Low</SelectItem>
+								</SelectContent>
+							</Select>
+						</div>
+
+						<div className="space-y-2">
+							<Label className="text-foreground font-semibold">Assignee</Label>
+							<Select name="assigneeId">
+								<SelectTrigger className="w-full">
+									<SelectValue placeholder="Select team member" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="">Unassigned</SelectItem>
+									{members.map((member) => (
+										<SelectItem key={member.id} value={member.id}>
+											{member.firstName} {member.lastName}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</div>
+					</div>
+
+					<div className="space-y-2">
+						<Label
+							htmlFor="dueDate"
+							className="flex items-center justify-between text-foreground font-semibold"
+						>
+							Due Date
+							<span className="text-xs text-muted-foreground font-normal">
+								Optional
+							</span>
+						</Label>
+						<Input
+							id="dueDate"
+							name="dueDate"
+							type="date"
+							className="text-foreground"
+						/>
+					</div>
+
+					<DialogFooter className="mt-4 sm:justify-end gap-2">
+						<DialogClose asChild>
+							<Button
+								type="button"
+								variant="ghost"
+								className="text-muted-foreground hover:text-foreground"
+							>
+								Cancel
+							</Button>
+						</DialogClose>
+						<Button type="submit">Create Task</Button>
+					</DialogFooter>
+				</form>
+			</DialogContent>
+		</Dialog>
 	);
 }

@@ -3,7 +3,7 @@
 import { Trash2 } from "lucide-react";
 import { type KeyboardEvent, useState, useTransition } from "react";
 import { CreateListModal } from "@/components/create-list-button";
-import { CreateTaskModal } from "@/components/create-task-button";
+import { CreateTaskButton } from "@/components/create-task-button";
 import TaskCard from "@/components/task-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,10 +49,12 @@ export function BoardColumn({
 	list,
 	projectId,
 	members,
+	createWidget,
 }: {
 	list: List;
 	projectId: string;
 	members: User[];
+	createWidget: React.ReactNode;
 }) {
 	const [_isLoading, startTransition] = useTransition();
 	const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -185,12 +187,7 @@ export function BoardColumn({
 						members={members}
 					/>
 				))}
-				<CreateTaskModal
-					projectId={projectId}
-					members={members}
-					listId={list.id}
-					position={list.tasks.length}
-				/>
+				{createWidget}
 			</div>
 		</div>
 	);
@@ -214,6 +211,14 @@ export function KanbanBoard({
 						list={list}
 						projectId={projectId}
 						members={members}
+						createWidget={
+							<CreateTaskButton
+								projectId={projectId}
+								members={members}
+								lists={lists}
+								defaultListId={list.id}
+							/>
+						}
 					/>
 				))}
 				<CreateListModal projectId={projectId} position={lists.length} />

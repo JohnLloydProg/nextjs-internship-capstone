@@ -1,5 +1,7 @@
 import type { List } from "@/types/index";
 import { db } from "..";
+import { tasks } from "../schema";
+import { eq } from "drizzle-orm";
 
 export async function getListsByProjectId(projectId: string): Promise<List[]> {
 	return await db.query.lists.findMany({
@@ -18,4 +20,8 @@ export async function getListsByProjectId(projectId: string): Promise<List[]> {
 			},
 		},
 	});
+}
+
+export async function getTaskCountByListId(listId: string) {
+	return db.$count(tasks, eq(tasks.listId, listId));
 }
