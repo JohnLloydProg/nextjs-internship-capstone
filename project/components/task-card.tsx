@@ -1,5 +1,6 @@
 "use client";
 
+import { useSortable } from "@dnd-kit/react/sortable";
 import { MoreHorizontal, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useActionState, useTransition } from "react";
@@ -257,14 +258,29 @@ const PRIORITY_STYLES: Record<string, string> = {
 };
 
 export default function TaskCard({
+	index,
 	task,
 	projectId,
+	group,
 }: {
 	task: Task;
+	index: number;
 	projectId: string;
+	group: string;
 }) {
+	const { ref, isDragging } = useSortable({
+		id: task.id,
+		index: index,
+		type: "task",
+		accept: "task",
+		group: group,
+	});
+
 	return (
-		<div className="group/card p-5 rounded-lg border bg-card shadow-sm flex flex-col gap-4 hover:border-primary border-border cursor-pointer transition-colors relative group">
+		<div
+			ref={ref}
+			className={`group/card p-5 rounded-lg border bg-card shadow-sm flex flex-col gap-4 hover:border-primary border-border cursor-pointer relative group transition-all ${isDragging ? "rotate-2 opacity-60" : "rotate-0 opacity-100"}`}
+		>
 			<div className="flex items-start justify-between gap-3">
 				<span className="font-bold text-foreground text-base tracking-tight leading-snug pt-1">
 					{task.title}

@@ -183,3 +183,32 @@ export async function deleteTaskAction(
 		success: true,
 	};
 }
+
+export async function moveTasksAction(
+	projectId: string,
+	updates: {
+		id: string;
+		listId: string;
+		position: number;
+	}[],
+) {
+	try {
+		for (const update of updates) {
+			await updateTask(update.id, {
+				listId: update.listId,
+				position: update.position,
+			});
+		}
+		revalidatePath(`/projects/${projectId}`);
+	} catch (_error) {
+		return {
+			success: false,
+			message: "Error while updating tasks",
+		};
+	}
+
+	return {
+		success: true,
+		message: "Tasks updated successfully",
+	};
+}

@@ -100,3 +100,25 @@ export async function deleteListAction(
 		message: "List deleted successfully",
 	};
 }
+
+export async function reorderListsAction(
+	projectId: string,
+	updates: { id: string; position: number }[],
+) {
+	try {
+		for (const update of updates) {
+			await updateList(update.id, { position: update.position });
+		}
+		revalidatePath(`/projects/${projectId}`);
+	} catch (_error) {
+		return {
+			success: false,
+			message: "Error while updating lists",
+		};
+	}
+
+	return {
+		success: true,
+		message: "Lists order updated successfully",
+	};
+}
