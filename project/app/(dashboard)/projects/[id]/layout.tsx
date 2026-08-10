@@ -3,10 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type React from "react";
 import ProjectNavBar from "@/components/project-nav";
-import { Button } from "@/components/ui/button";
 import { getProjectById } from "@/lib/db/queries/projects";
 
-export default async function ProjectPage({
+export default async function ProjectLayout({
 	params,
 	children,
 }: {

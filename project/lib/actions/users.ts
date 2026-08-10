@@ -7,6 +7,7 @@ import { createAssignment } from "../db/mutations/projects";
 import {
 	deleteAssignmentByCompositeID,
 	updateAssignmentByCompositeID,
+	updateUserByClerkId,
 } from "../db/mutations/users";
 import {
 	getUserByClerkId,
@@ -161,4 +162,56 @@ export async function updateAssignmentRoleAction(
 	revalidatePath("/teams");
 
 	return { success: true, message: "Permissions updated" };
+}
+
+const updateProfileSchema = z.object({
+	firstName: z.string().min(1, "First name is required").max(100),
+	lastName: z.string().min(1, "Last name is required").max(100),
+	email: z
+		.string()
+		.regex(
+			/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+			"Enter a valid email address",
+		),
+	jobPosition: z.preprocess(
+		(val) => (val === "" ? undefined : val),
+		z.string().max(100).optional(),
+	),
+	bio: z.preprocess(
+		(val) => (val === "" ? undefined : val),
+		z.string().max(500, "Bio must be 500 characters or less").optional(),
+	),
+});
+
+export async function updateUserAction(
+	_prevState: FormState | null,
+	formData: FormData,
+): Promise<FormState> {
+	const { userId: clerkId } = await auth();
+	if (!clerkId) return { success: false, message: "Unauthorized" };
+
+	const data = Object.fromEntries(formData.entries());
+	const validatedFields = updateProfileSchema.safeParse(data);
+
+	if (!validatedFields.success) {
+		return {
+			errors: z.flattenError(validatedFields.error).fieldErrors,
+			success: false,
+		};
+	}
+
+	try {
+		const updated = await updateUserByClerkId(clerkId, validatedFields.data);
+		if (!updated) return { success: false, message: "User not found" };
+	} catch (error) {
+		console.error("Error while updating profile:", error);
+		return {
+			success: false,
+			message: "Database error: Failed to update profile.",
+		};
+	}
+
+	revalidatePath("/settings");
+
+	return { success: true, message: "Profile updated successfully" };
 }

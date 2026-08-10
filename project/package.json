@@ -24,6 +24,10 @@
 	"dependencies": {
 		"@clerk/nextjs": "^7.5.20",
 		"@clerk/ui": "^1.25.5",
+		"@dnd-kit/abstract": "^0.5.0",
+		"@dnd-kit/collision": "^0.5.0",
+		"@dnd-kit/dom": "^0.5.0",
+		"@dnd-kit/react": "^0.5.0",
 		"@neondatabase/serverless": "^1.1.0",
 		"@tabler/icons-react": "^3.45.0",
 		"@tailwindcss/postcss": "^4.3.3",
