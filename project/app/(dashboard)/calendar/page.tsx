@@ -1,6 +1,8 @@
+import { auth } from "@clerk/nextjs/server";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import {
 	addDays,
 	type CalendarDay,
@@ -11,13 +13,11 @@ import {
 	getWeekDays,
 	toDateKey,
 } from "@/lib/calendar";
+import type { UpcomingDeadline } from "@/lib/db/queries/tasks";
 import {
 	getTasksDueBetween,
 	getUpcomingDueTasks,
 } from "@/lib/db/queries/tasks";
-import type { UpcomingDeadline } from "@/lib/db/queries/tasks";
-import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
 
 const STATUS_STYLES: Record<string, string> = {
 	urgent: "bg-red-300 text-red-900",

@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import type { User } from "@/types/index";
 import { updateUserAction } from "@/lib/actions/users";
+import type { User } from "@/types/index";
 
 export default function ProfileForm({ user }: { user: User }) {
 	const [state, formAction, isPending] = useActionState(updateUserAction, null);
