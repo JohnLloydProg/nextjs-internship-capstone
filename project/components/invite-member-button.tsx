@@ -1,9 +1,9 @@
 "use client";
 
 import { UserPlusIcon } from "lucide-react";
-import { Button } from "./ui/button";
 import { useState } from "react";
 import { InviteMemberModal } from "./modals/invite-member-modal";
+import { Button } from "./ui/button";
 
 export default function InviteMemberButton({
 	projectId,

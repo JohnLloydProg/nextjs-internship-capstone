@@ -1,12 +1,14 @@
 "use client";
 
 import { Trash2 } from "lucide-react";
-import { type KeyboardEvent, useState, useTransition } from "react";
+import { type KeyboardEvent, useEffect, useState, useTransition } from "react";
 import CreateListModal from "@/components/create-list-button";
 import CreateTaskButton from "@/components/create-task-button";
 import TaskCard from "@/components/task-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useLists } from "@/hooks/use-lists";
+import { useMembers } from "@/hooks/use-members";
 import { deleteListAction, updateListAction } from "@/lib/actions/lists";
 import type { List, User } from "@/types/index";
 
@@ -48,12 +50,10 @@ State management:
 export function BoardColumn({
 	list,
 	projectId,
-	members,
 	createWidget,
 }: {
 	list: List;
 	projectId: string;
-	members: User[];
 	createWidget: React.ReactNode;
 }) {
 	const [_isLoading, startTransition] = useTransition();
@@ -180,12 +180,7 @@ export function BoardColumn({
 
 			<div className="p-4 flex flex-col gap-4">
 				{list.tasks.map((task) => (
-					<TaskCard
-						key={task.id}
-						task={task}
-						projectId={projectId}
-						members={members}
-					/>
+					<TaskCard key={task.id} task={task} projectId={projectId} />
 				))}
 				{createWidget}
 			</div>
@@ -202,6 +197,14 @@ export default function KanbanBoard({
 	lists: List[];
 	members: User[];
 }) {
+	const setLists = useLists((state) => state.setLists);
+	const setMembers = useMembers((state) => state.setMembers);
+
+	useEffect(() => {
+		setLists(lists);
+		setMembers(members);
+	}, [lists, members, setLists, setMembers]);
+
 	return (
 		<div className="flex flex-col w-full max-w-6xl overflow-x-auto scrollbar-thin">
 			<div className="flex flex-col lg:flex-row gap-6 p-5 w-fit min-h-[calc(100vh-180px)]">
@@ -210,13 +213,12 @@ export default function KanbanBoard({
 						key={list.id}
 						list={list}
 						projectId={projectId}
-						members={members}
 						createWidget={
 							<CreateTaskButton
 								projectId={projectId}
-								members={members}
-								lists={lists}
 								defaultListId={list.id}
+								lists={lists}
+								members={members}
 							/>
 						}
 					/>

@@ -1,8 +1,11 @@
 import { auth } from "@clerk/nextjs/server";
 import { Search } from "lucide-react";
 import { redirect } from "next/navigation";
+import CreateTaskButton from "@/components/create-task-button";
+import InviteMemberButton from "@/components/invite-member-button";
 import TeamInviteRow from "@/components/team-invite-row";
 import { Input } from "@/components/ui/input";
+import { getListsByProjectId } from "@/lib/db/queries/lists";
 import { getProjects } from "@/lib/db/queries/projects";
 import {
 	getInvitesByUser,
@@ -13,9 +16,6 @@ import {
 import type { Project } from "@/types/index";
 import MemberCard from "./member-card";
 import TeamSectionToggle from "./team-section-toggle";
-import InviteMemberButton from "@/components/invite-member-button";
-import CreateTaskButton from "@/components/create-task-button";
-import { getListsByProjectId } from "@/lib/db/queries/lists";
 
 export default async function TeamsPage() {
 	const { userId } = await auth();
@@ -112,9 +112,9 @@ async function ProjectTeamSection({ project }: { project: Project }) {
 						/>
 						<CreateTaskButton
 							projectId={project.id}
+							defaultListId=""
 							members={members}
 							lists={lists}
-							defaultListId=""
 						/>
 					</div>
 				)}

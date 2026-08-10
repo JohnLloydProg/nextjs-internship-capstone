@@ -6,10 +6,10 @@ import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import type { Project, User } from "../types/index";
-import { RemoveMemberAlert } from "./remove-member-modal";
-import EditPermissionsModal from "./modals/update-permission-modal";
-import { Button } from "./ui/button";
 import InviteMemberButton from "./invite-member-button";
+import EditPermissionsModal from "./modals/update-permission-modal";
+import { RemoveMemberAlert } from "./remove-member-modal";
+import { Button } from "./ui/button";
 
 export type AssignmentWithUser = {
 	projectId: string;

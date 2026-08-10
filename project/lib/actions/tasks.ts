@@ -5,9 +5,9 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { User } from "@/types/index";
 import { createTask, deleteTask, updateTask } from "../db/mutations/tasks";
+import { getTaskCountByListId } from "../db/queries/lists";
 import { getUserByClerkId } from "../db/queries/users";
 import type { FormState } from "./projects";
-import { getTaskCountByListId } from "../db/queries/lists";
 
 const createTaskSchema = z.object({
 	title: z.string().min(1, "Task title is required"),
@@ -30,6 +30,7 @@ const createTaskSchema = z.object({
 
 const updateTaskSchema = z.object({
 	title: z.string().min(1, "Task title is required").optional(),
+	listId: z.string(),
 
 	description: z.preprocess(
 		(val) => (val === "" ? null : val),
@@ -69,7 +70,7 @@ export async function createTaskAction(
 
 	if (!validatedFields.success) {
 		return {
-			errors: validatedFields.error.flatten().fieldErrors,
+			errors: z.flattenError(validatedFields.error).fieldErrors,
 			message: "Failed to create task. Please check your inputs.",
 			success: false,
 		};
@@ -130,7 +131,9 @@ export async function updateTaskAction(
 			Object.entries(validatedFields.data).filter(([_, v]) => v !== undefined),
 		);
 
-		await updateTask(taskId, updateData);
+		const position = await getTaskCountByListId(validatedFields.data.listId);
+
+		await updateTask(taskId, { position: position, ...updateData });
 	} catch (error) {
 		console.error("Failed to update task in database:", error);
 		return {

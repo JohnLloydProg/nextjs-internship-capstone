@@ -24,8 +24,10 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useLists } from "@/hooks/use-lists";
+import { useMembers } from "@/hooks/use-members";
 import { deleteTaskAction, updateTaskAction } from "@/lib/actions/tasks";
-import type { Task, User } from "../types/index";
+import type { Task } from "../types/index";
 
 /*
 TODO: Implementation Notes for Interns:
@@ -67,17 +69,19 @@ Features to implement:
 export function TaskMenuButton({
 	task,
 	projectId,
-	members,
+	defaultListId,
 }: {
 	task: Task;
 	projectId: string;
-	members: User[];
+	defaultListId: string;
 }) {
 	const [, formAction] = useActionState(
 		updateTaskAction.bind(null, projectId).bind(null, task.id),
 		null,
 	);
 	const [, startTranstion] = useTransition();
+	const lists = useLists((state) => state.lists);
+	const members = useMembers((state) => state.members);
 
 	const handleMenuClick = (e: React.MouseEvent) => {
 		e.stopPropagation();
@@ -131,6 +135,24 @@ export function TaskMenuButton({
 							defaultValue={task.description || ""}
 							className="h-20 resize-none"
 						/>
+					</div>
+
+					<div className="space-y-2">
+						<Label className="text-foreground font-semibold">
+							List <span className="text-destructive">*</span>
+						</Label>
+						<Select name="listId" defaultValue={defaultListId} required>
+							<SelectTrigger className="w-full">
+								<SelectValue placeholder="Select a list" />
+							</SelectTrigger>
+							<SelectContent>
+								{lists.map((list) => (
+									<SelectItem key={list.id} value={list.id}>
+										{list.name}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
 					</div>
 
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -227,29 +249,19 @@ export function TaskMenuButton({
 	);
 }
 
-function getPriorityColor(priority: string) {
-	switch (priority) {
-		case "urgent":
-			return "bg-red-300 text-red-900";
-		case "high":
-			return "bg-orange-300 text-orange-900";
-		case "medium":
-			return "bg-yellow-300 text-yellow-900";
-		case "low":
-			return "bg-green-300 text-green-900";
-		default:
-			return "bg-zinc-300 text-zing-900";
-	}
-}
+const PRIORITY_STYLES: Record<string, string> = {
+	urgent: "bg-red-300 text-red-900",
+	high: "bg-orange-300 text-orange-900",
+	medium: "bg-yellow-300 text-yellow-900",
+	low: "bg-green-300 text-green-900",
+};
 
 export default function TaskCard({
 	task,
 	projectId,
-	members,
 }: {
 	task: Task;
 	projectId: string;
-	members: User[];
 }) {
 	return (
 		<div className="group/card p-5 rounded-lg border bg-card shadow-sm flex flex-col gap-4 hover:border-primary border-border cursor-pointer transition-colors relative group">
@@ -260,12 +272,16 @@ export default function TaskCard({
 
 				<div className="flex items-center gap-1 shrink-0">
 					<span
-						className={`px-3 py-0.5 rounded-full text-[11px] font-bold ${getPriorityColor(task.priority)}`}
+						className={`px-3 py-0.5 rounded-full text-[11px] font-bold ${PRIORITY_STYLES[task.priority] ?? "bg-zinc-300 text-zing-900"}`}
 					>
 						{task.priority.toUpperCase()}
 					</span>
 
-					<TaskMenuButton task={task} projectId={projectId} members={members} />
+					<TaskMenuButton
+						task={task}
+						projectId={projectId}
+						defaultListId={task.listId}
+					/>
 				</div>
 			</div>
 
@@ -278,7 +294,10 @@ export default function TaskCard({
 			<div className="flex justify-between mt-auto items-center pt-2">
 				<span className="text-sm font-medium text-foreground">
 					{task.dueDate
-						? new Date(task.dueDate).toLocaleDateString()
+						? new Date(task.dueDate).toLocaleDateString("en-Us", {
+								month: "short",
+								day: "numeric",
+							})
 						: "No Due Date"}
 				</span>
 				<div className="w-7 h-7 rounded-full bg-zinc-200 dark:bg-zinc-800 border border-border overflow-hidden shrink-0">

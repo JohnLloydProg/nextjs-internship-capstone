@@ -21,21 +21,18 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useLists } from "@/hooks/use-lists";
+import { useMembers } from "@/hooks/use-members";
 import { createTaskAction } from "@/lib/actions/tasks";
-import type { List, User } from "@/types/index";
 import { FormMessage } from "../formMessage";
 
 export function CreateTaskModal({
 	projectId,
-	members,
-	lists,
 	defaultListId,
 	open,
 	onOpenChange,
 }: {
 	projectId: string;
-	members: User[];
-	lists: List[];
 	defaultListId: string;
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
@@ -44,6 +41,8 @@ export function CreateTaskModal({
 		createTaskAction.bind(null, projectId),
 		null,
 	);
+	const lists = useLists((state) => state.lists);
+	const members = useMembers((state) => state.members);
 
 	return (
 		<Dialog open={open} onOpenChange={(next) => onOpenChange(next)}>

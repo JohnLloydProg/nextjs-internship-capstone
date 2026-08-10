@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { removeAssignmentAction } from "@/lib/actions/users";
 import type { Member } from "../types/index";
+import EditPermissionsModal from "./modals/update-permission-modal";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -22,7 +23,6 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "./ui/alert-dialog";
-import EditPermissionsModal from "./modals/update-permission-modal";
 
 export default function MemberActionsMenu({
 	member,

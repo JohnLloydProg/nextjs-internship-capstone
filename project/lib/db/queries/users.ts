@@ -85,3 +85,20 @@ export async function userIsOwner(projectId: string, clerkId: string) {
 		return false;
 	}
 }
+
+export async function userIsEditor(projectId: string, clerkId: string) {
+	try {
+		const assignment = await db.query.assignments.findFirst({
+			where: {
+				projectId: projectId,
+				user: {
+					clerkId: clerkId,
+				},
+				role: "editor",
+			},
+		});
+		return !!assignment;
+	} catch (_error) {
+		return false;
+	}
+}
