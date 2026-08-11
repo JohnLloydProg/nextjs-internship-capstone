@@ -49,6 +49,7 @@ export interface Task {
 	priority: "low" | "medium" | "high" | "urgent";
 	dueDate: Date | null;
 	position: number;
+	attachments: Attachment[];
 	startedAt: Date | null;
 	finishedAt: Date | null;
 	createdAt: Date;
@@ -60,6 +61,7 @@ export interface Comment {
 	content: string;
 	taskId: string;
 	author: User;
+	attachments: Attachment[];
 	createdAt: Date;
 	updatedAt: Date;
 }
@@ -72,4 +74,25 @@ export interface Notification {
 	link: string;
 	isRead: boolean;
 	createdAt: Date;
+}
+
+export interface Attachment {
+	id: string;
+	fileName: string;
+	mimeType: string;
+	sizeBytes: number;
+	storageKey: string;
+	uploadedBy: string;
+	createdAt: Date;
+}
+
+export interface TaskHistory {
+	id: string;
+	taskId: string;
+	userId: string;
+	editId: string;
+	fieldName: string;
+	oldValue: string;
+	newValue: string;
+	changedAt: Date;
 }

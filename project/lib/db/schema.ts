@@ -1,5 +1,6 @@
 import { defineRelations } from "drizzle-orm";
 import {
+	bigint,
 	boolean,
 	index,
 	integer,
@@ -30,6 +31,8 @@ export const assignmentRole = pgEnum("assignment_role", [
 	"commenter",
 	"viewer",
 ]);
+
+export const attachmentType = pgEnum("type", ["comments", "tasks"]);
 
 export const roles = pgTable("roles", {
 	id: uuid("id").primaryKey().defaultRandom(),
@@ -186,6 +189,76 @@ export const notifications = pgTable(
 	(t) => [index("notifications_receiver_id_idx").on(t.receiverId)],
 );
 
+export const taskHistory = pgTable(
+	"task_history",
+	{
+		id: uuid("id").primaryKey().defaultRandom(),
+		taskId: uuid("task_id")
+			.notNull()
+			.references(() => tasks.id, { onDelete: "cascade" }),
+		userId: uuid("user_id").references(() => users.id, {
+			onDelete: "set null",
+		}),
+		editId: uuid("edit_id").notNull(),
+		fieldName: varchar("field_name", { length: 64 }).notNull(),
+		oldValue: text("old_value"),
+		newValue: text("new_value"),
+		changedAt: timestamp("changed_at").defaultNow().notNull(),
+	},
+	(t) => [index("task_history_task_idx").on(t.taskId, t.changedAt)],
+);
+
+export const attachments = pgTable(
+	"attachments",
+	{
+		id: uuid("id").defaultRandom().primaryKey(),
+		fileName: varchar("file_name", { length: 255 }).notNull(),
+		mimeType: varchar("mime_type", { length: 127 }).notNull(),
+		sizeBytes: bigint("size_bytes", { mode: "number" }).notNull(),
+		storageKey: text("storage_key").notNull(),
+		fileHash: varchar("file_hash", { length: 64 }).notNull(),
+		uploadedBy: uuid("uploaded_by").notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+	},
+	(t) => [index("attachments_file_hash_idx").on(t.fileHash)],
+);
+
+export const attachmentTasks = pgTable(
+	"attachment_tasks",
+	{
+		attachmentId: uuid("attachment_id")
+			.notNull()
+			.references(() => attachments.id, { onDelete: "cascade" }),
+		taskId: uuid("task_id")
+			.notNull()
+			.references(() => tasks.id, { onDelete: "cascade" }),
+		attachedAt: timestamp("attached_at").defaultNow().notNull(),
+	},
+	(t) => [
+		primaryKey({ columns: [t.attachmentId, t.taskId] }),
+		index("attachment_tasks_task_idx").on(t.taskId),
+		index("attachment_tasks_attachment_idx").on(t.attachmentId),
+	],
+);
+
+export const attachmentComments = pgTable(
+	"attachment_comments",
+	{
+		attachmentId: uuid("attachment_id")
+			.notNull()
+			.references(() => attachments.id, { onDelete: "cascade" }),
+		commentId: uuid("comment_id")
+			.notNull()
+			.references(() => comments.id, { onDelete: "cascade" }),
+		attachedAt: timestamp("attached_at").defaultNow().notNull(),
+	},
+	(t) => [
+		primaryKey({ columns: [t.attachmentId, t.commentId] }),
+		index("attachment_comments_comment_idx").on(t.commentId),
+		index("attachment_comments_attachment_idx").on(t.attachmentId),
+	],
+);
+
 export const relations = defineRelations(
 	{
 		users,
@@ -196,6 +269,10 @@ export const relations = defineRelations(
 		roles,
 		notifications,
 		assignments,
+		attachments,
+		attachmentComments,
+		attachmentTasks,
+		taskHistory,
 	},
 	(r) => ({
 		projects: {
@@ -237,6 +314,14 @@ export const relations = defineRelations(
 				to: r.users.id,
 				optional: true,
 			}),
+			attachments: r.many.attachments({
+				from: r.tasks.id.through(r.attachmentTasks.taskId),
+				to: r.attachments.id.through(r.attachmentTasks.attachmentId),
+			}),
+			history: r.many.taskHistory({
+				from: r.tasks.id,
+				to: r.taskHistory.taskId,
+			}),
 			comments: r.many.comments(),
 		},
 		comments: {
@@ -249,6 +334,10 @@ export const relations = defineRelations(
 				from: r.comments.authorId,
 				to: r.users.id,
 				optional: false,
+			}),
+			attachments: r.many.attachments({
+				from: r.comments.id.through(r.attachmentComments.commentId),
+				to: r.attachments.id.through(r.attachmentComments.attachmentId),
 			}),
 		},
 		notifications: {
