@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "..";
-import { attachmentTasks, attachments } from "../schema";
+import { attachments, attachmentTasks } from "../schema";
 
 type NewAttachment = typeof attachments.$inferInsert;
 

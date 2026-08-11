@@ -1,7 +1,7 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import { shadcn } from "@clerk/ui/themes";
 import type { Metadata } from "next";
-import { Public_Sans, Lato } from "next/font/google";
+import { Lato, Public_Sans } from "next/font/google";
 import type React from "react";
 import { cn } from "@/lib/utils";
 import "./globals.css";

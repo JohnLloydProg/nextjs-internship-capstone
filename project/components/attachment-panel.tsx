@@ -1,5 +1,6 @@
 import { FileIcon, Loader2, Paperclip, X } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import {
 	useActionState,
 	useEffect,
@@ -13,10 +14,9 @@ import {
 } from "@/lib/actions/attachments";
 import { getAttachmentUrl } from "@/lib/storage";
 import type { Task } from "../types/index";
-import { Label } from "./ui/label";
-import Link from "next/link";
-import { Input } from "./ui/input";
 import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
 
 function formatBytes(bytes: number): string {
 	if (bytes < 1024) return `${bytes} B`;
