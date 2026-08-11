@@ -8,6 +8,7 @@ import { createTask, deleteTask, updateTask } from "../db/mutations/tasks";
 import { getTaskCountByListId } from "../db/queries/lists";
 import { getUserByClerkId } from "../db/queries/users";
 import type { FormState } from "./projects";
+import { attachFilesToTask } from "./attachments";
 
 const createTaskSchema = z.object({
 	title: z.string().min(1, "Task title is required"),
@@ -65,7 +66,9 @@ export async function createTaskAction(
 	}
 	if (!user) return { success: false, message: "Can't find user" };
 
-	const data = Object.fromEntries(formData.entries());
+	const data = Object.fromEntries(
+		Array.from(formData.entries()).filter(([key]) => key !== "files"),
+	);
 	const validatedFields = createTaskSchema.safeParse(data);
 
 	if (!validatedFields.success) {
@@ -76,9 +79,14 @@ export async function createTaskAction(
 		};
 	}
 
+	let createdTask: { id: string } | undefined;
+
 	try {
 		const position = await getTaskCountByListId(validatedFields.data.listId);
-		await createTask({ position: position, ...validatedFields.data });
+		createdTask = await createTask({
+			position: position,
+			...validatedFields.data,
+		});
 	} catch (error) {
 		console.error("Failed to create task in database:", error);
 		return {
@@ -87,10 +95,23 @@ export async function createTaskAction(
 		};
 	}
 
+	const files = formData
+		.getAll("files")
+		.filter((entry): entry is File => entry instanceof File && entry.size > 0);
+
+	let skippedFiles: string[] = [];
+	if (files.length > 0 && createdTask) {
+		const result = await attachFilesToTask(createdTask.id, files, user.id);
+		skippedFiles = result.skipped;
+	}
+
 	revalidatePath(`/projects/${projectId}`);
 
 	return {
-		message: "Task created successfully",
+		message:
+			skippedFiles.length > 0
+				? `Task created. Skipped files over 10MB: ${skippedFiles.join(", ")}`
+				: "Task created successfully",
 		success: true,
 	};
 }

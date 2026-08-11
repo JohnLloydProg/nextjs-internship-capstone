@@ -62,7 +62,7 @@ export default function AttachmentsPanel({
 					</p>
 				</div>
 			) : (
-				<div className="flex flex-col gap-2 max-h-48 overflow-y-auto scrollbar-thin">
+				<div className="flex flex-col gap-2 max-h-30 overflow-y-auto scrollbar-thin">
 					{task.attachments.map((attachment) => (
 						<div
 							key={attachment.id}

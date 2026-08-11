@@ -18,6 +18,54 @@ import type { FormState } from "./projects";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
+async function processAttachmentUpload(file: File, uploaderId: string) {
+	const buffer = Buffer.from(await file.arrayBuffer());
+	const fileHash = hashBuffer(buffer);
+
+	let attachment = await findAttachmentByHash(fileHash);
+
+	if (!attachment) {
+		const storageKey = await uploadFile(
+			buffer,
+			file.name,
+			fileHash,
+			file.type || "application/octet-stream",
+		);
+		attachment = await createAttachmentRecord({
+			fileName: file.name,
+			mimeType: file.type || "application/octet-stream",
+			sizeBytes: file.size,
+			storageKey,
+			fileHash,
+			uploaderId,
+		});
+	}
+
+	return attachment;
+}
+
+export async function attachFilesToTask(
+	taskId: string,
+	files: File[],
+	uploaderId: string,
+): Promise<{ skipped: string[] }> {
+	const skipped: string[] = [];
+
+	for (const file of files) {
+		if (!(file instanceof File) || file.size === 0) continue;
+
+		if (file.size > MAX_FILE_SIZE) {
+			skipped.push(file.name);
+			continue;
+		}
+
+		const attachment = await processAttachmentUpload(file, uploaderId);
+		if (attachment) await linkAttachmentToTask(attachment.id, taskId);
+	}
+
+	return { skipped };
+}
+
 export async function createAttachmentAction(
 	projectId: string,
 	taskId: string,
@@ -39,27 +87,7 @@ export async function createAttachmentAction(
 	}
 
 	try {
-		const buffer = Buffer.from(await file.arrayBuffer());
-		const fileHash = hashBuffer(buffer);
-
-		let attachment = await findAttachmentByHash(fileHash);
-
-		if (!attachment) {
-			const storageKey = await uploadFile(
-				buffer,
-				file.name,
-				fileHash,
-				file.type || "application/octet-stream",
-			);
-			attachment = await createAttachmentRecord({
-				fileName: file.name,
-				mimeType: file.type || "application/octet-stream",
-				sizeBytes: file.size,
-				storageKey,
-				fileHash,
-				uploaderId: user.id,
-			});
-		}
+		const attachment = await processAttachmentUpload(file, user.id);
 
 		if (!attachment) {
 			return { success: false, message: "Failed to store attachment." };
