@@ -16,6 +16,17 @@ export async function getListsByProjectId(projectId: string): Promise<List[]> {
 				orderBy: { position: "asc" },
 				with: {
 					assignee: true,
+					attachments: {
+						columns: {
+							fileHash: false,
+						},
+						orderBy: {
+							createdAt: "desc",
+						},
+						with: {
+							uploadedBy: true,
+						},
+					},
 				},
 			},
 		},

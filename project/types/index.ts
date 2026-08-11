@@ -82,7 +82,7 @@ export interface Attachment {
 	mimeType: string;
 	sizeBytes: number;
 	storageKey: string;
-	uploadedBy: string;
+	uploadedBy: User | null;
 	createdAt: Date;
 }
 

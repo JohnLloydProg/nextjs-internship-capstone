@@ -217,7 +217,9 @@ export const attachments = pgTable(
 		sizeBytes: bigint("size_bytes", { mode: "number" }).notNull(),
 		storageKey: text("storage_key").notNull(),
 		fileHash: varchar("file_hash", { length: 64 }).notNull(),
-		uploadedBy: uuid("uploaded_by").notNull(),
+		uploaderId: uuid("uploaded_by").references(() => users.id, {
+			onDelete: "set null",
+		}),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
 	(t) => [index("attachments_file_hash_idx").on(t.fileHash)],
@@ -356,6 +358,37 @@ export const relations = defineRelations(
 			user: r.one.users({
 				from: r.assignments.userId,
 				to: r.users.id,
+				optional: false,
+			}),
+		},
+		attachments: {
+			uploadedBy: r.one.users({
+				from: r.attachments.uploaderId,
+				to: r.users.id,
+				optional: true,
+			}),
+		},
+		attachmentTasks: {
+			attachment: r.one.attachments({
+				from: r.attachmentTasks.attachmentId,
+				to: r.attachments.id,
+				optional: false,
+			}),
+			task: r.one.tasks({
+				from: r.attachmentTasks.taskId,
+				to: r.tasks.id,
+				optional: false,
+			}),
+		},
+		attachmentComments: {
+			attachment: r.one.attachments({
+				from: r.attachmentComments.attachmentId,
+				to: r.attachments.id,
+				optional: false,
+			}),
+			comment: r.one.comments({
+				from: r.attachmentComments.commentId,
+				to: r.comments.id,
 				optional: false,
 			}),
 		},

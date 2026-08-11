@@ -1,7 +1,7 @@
 import type { Project, Task } from "@/types/index";
 import { db } from "..";
 
-export interface CalendarTask extends Task {
+export interface CalendarTask extends Omit<Task, "attachments"> {
 	project: Omit<Project, "owner">;
 }
 
@@ -36,7 +36,7 @@ export async function getTasksDueBetween(
 	return tasks.map((task) => ({ project: task.list.project, ...task }));
 }
 
-export interface UpcomingDeadline extends Task {
+export interface UpcomingDeadline extends Omit<Task, "attachments"> {
 	project: Omit<Project, "owner">;
 }
 

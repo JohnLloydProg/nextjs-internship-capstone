@@ -3,7 +3,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import type { User } from "@/types/index";
+import type { Task, User } from "@/types/index";
 import { createTask, deleteTask, updateTask } from "../db/mutations/tasks";
 import { getTaskCountByListId } from "../db/queries/lists";
 import { getUserByClerkId } from "../db/queries/users";
@@ -97,7 +97,7 @@ export async function createTaskAction(
 
 export async function updateTaskAction(
 	projectId: string,
-	taskId: string,
+	task: Task,
 	_prevState: FormState | null, // Replace 'any' with your FormState type
 	formData: FormData,
 ): Promise<FormState> {
@@ -127,13 +127,17 @@ export async function updateTaskAction(
 
 	try {
 		// Clean the object to remove undefined fields so Drizzle doesn't try to update them
-		const updateData = Object.fromEntries(
+		const updateData = Object.fromEntries<string | Date | number | null>(
 			Object.entries(validatedFields.data).filter(([_, v]) => v !== undefined),
 		);
 
-		const position = await getTaskCountByListId(validatedFields.data.listId);
+		if (task.listId !== validatedFields.data.listId) {
+			updateData.position = await getTaskCountByListId(
+				validatedFields.data.listId,
+			);
+		}
 
-		await updateTask(taskId, { position: position, ...updateData });
+		await updateTask(task.id, updateData);
 	} catch (error) {
 		console.error("Failed to update task in database:", error);
 		return {
