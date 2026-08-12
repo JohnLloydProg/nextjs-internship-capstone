@@ -1,12 +1,13 @@
-import { FileIcon } from "lucide-react";
-import Image from "next/image";
+import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import CommentContainer from "@/components/comment";
 import CommentComposer from "@/components/comment-composer";
 import {
 	getCommentsByTaskId,
 	getTaskCommentThreads,
 } from "@/lib/db/queries/comments";
+import { getUserByClerkId } from "@/lib/db/queries/users";
 
 export default async function ProjectCommentsPage({
 	params,
@@ -17,6 +18,11 @@ export default async function ProjectCommentsPage({
 }) {
 	const { id: projectId } = await params;
 	const { taskId } = await searchParams;
+	const { userId: clerkId } = await auth();
+	if (!clerkId) redirect("/sign-in");
+
+	const user = await getUserByClerkId(clerkId);
+	if (!user) redirect("/sign-in");
 
 	const threads = await getTaskCommentThreads(projectId);
 	const selectedThread = threads.find(
@@ -93,58 +99,12 @@ export default async function ProjectCommentsPage({
 						</p>
 					) : (
 						comments.map((comment) => (
-							<div key={comment.id} className="flex gap-3 items-start">
-								<div className="w-9 h-9 rounded-full bg-muted overflow-hidden shrink-0">
-									{comment.author.profilePic && (
-										<Image
-											src={comment.author.profilePic}
-											alt={`${comment.author.firstName} ${comment.author.lastName}`}
-											width={36}
-											height={36}
-											className="w-full h-full object-cover"
-										/>
-									)}
-								</div>
-								<div className="flex-1 min-w-0">
-									<p className="font-bold text-primary text-sm mb-1">
-										{comment.author.firstName} {comment.author.lastName}
-									</p>
-									<div className="bg-muted/50 border border-border rounded-lg overflow-hidden max-w-md">
-										<p className="px-4 py-2.5 text-sm text-foreground">
-											{comment.content}
-										</p>
-										{comment.attachments.length > 0 && (
-											<div className="px-3 pb-3 flex flex-wrap gap-2">
-												{comment.attachments.map((attachment) =>
-													attachment.mimeType.startsWith("image/") ? (
-														<Image
-															key={attachment.id}
-															src={attachment.storageKey}
-															alt={attachment.fileName}
-															width={180}
-															height={140}
-															className="rounded-md object-cover border border-border"
-														/>
-													) : (
-														<Link
-															key={attachment.id}
-															href={attachment.storageKey}
-															target="_blank"
-															rel="noopener noreferrer"
-															className="flex items-center gap-2 px-3 py-2 rounded-md border border-border bg-background text-xs font-medium text-foreground hover:text-primary"
-														>
-															<FileIcon className="w-3.5 h-3.5 shrink-0" />
-															<span className="truncate max-w-32">
-																{attachment.fileName}
-															</span>
-														</Link>
-													),
-												)}
-											</div>
-										)}
-									</div>
-								</div>
-							</div>
+							<CommentContainer
+								key={comment.id}
+								comment={comment}
+								projectId={projectId}
+								currentUserId={user.id}
+							/>
 						))
 					)}
 				</div>

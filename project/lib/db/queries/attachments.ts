@@ -19,3 +19,27 @@ export async function count_attachment_links(
 	);
 	return task_links + comment_links;
 }
+
+export async function getAttachmentLinksByTaskId(taskId: string) {
+	const attachmentLinks = await db.query.attachmentTasks.findMany({
+		where: {
+			taskId: taskId,
+		},
+		with: {
+			attachment: true,
+		},
+	});
+	return attachmentLinks;
+}
+
+export async function getAttachmentLinksByCommentId(commentId: string) {
+	const attachmentLinks = await db.query.attachmentComments.findMany({
+		where: {
+			commentId: commentId,
+		},
+		with: {
+			attachment: true,
+		},
+	});
+	return attachmentLinks;
+}
