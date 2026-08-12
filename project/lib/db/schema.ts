@@ -195,7 +195,7 @@ export const taskHistory = pgTable(
 		id: uuid("id").primaryKey().defaultRandom(),
 		taskId: uuid("task_id")
 			.notNull()
-			.references(() => tasks.id, { onDelete: "cascade" }),
+			.references(() => tasks.id, { onDelete: "set null" }),
 		userId: uuid("user_id").references(() => users.id, {
 			onDelete: "set null",
 		}),
@@ -390,6 +390,13 @@ export const relations = defineRelations(
 				from: r.attachmentComments.commentId,
 				to: r.comments.id,
 				optional: false,
+			}),
+		},
+		taskHistory: {
+			changedBy: r.one.users({
+				from: r.taskHistory.userId,
+				to: r.users.id,
+				optional: true,
 			}),
 		},
 	}),

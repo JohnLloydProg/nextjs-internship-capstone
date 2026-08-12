@@ -1,15 +1,14 @@
 "use server";
-import { auth } from "@clerk/nextjs/server";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/dist/client/components/navigation";
 import { z } from "zod";
-import type { User } from "@/types/index";
+import { getLoggedInUser, LoggedInOwner } from "../authentication";
 import {
 	createProject,
 	deleteProject,
 	updateProject,
 } from "../db/mutations/projects";
-import { getUserByClerkId, userIsOwner } from "../db/queries/users";
 
 export interface FormState {
 	success: boolean;
@@ -34,17 +33,8 @@ export async function CreateProjectAction(
 	_: FormState | null,
 	formData: FormData,
 ): Promise<FormState> {
-	const { userId } = await auth();
-	if (!userId) return { success: false, message: "Unauthorized" };
-
-	let user: User | null;
-	try {
-		user = await getUserByClerkId(userId);
-	} catch (error) {
-		console.error("Error while getting user:", error);
-		return { success: false, message: "Error while getting user." };
-	}
-	if (!user) return { success: false, message: "Can't find user" };
+	const user = await getLoggedInUser();
+	if (!user) return { success: false, message: "Unauthorized" };
 
 	const data = Object.fromEntries(formData.entries());
 	const parseResult = createProjectSchema.safeParse({
@@ -85,10 +75,7 @@ export async function updateProjectAction(
 	_prevState: FormState | null,
 	formData: FormData,
 ): Promise<FormState> {
-	const { userId } = await auth();
-	if (!userId) return { success: false, message: "Unauthorized" };
-
-	const isOwner = await userIsOwner(projectId, userId);
+	const isOwner = await LoggedInOwner(projectId);
 	if (!isOwner) {
 		return {
 			success: false,
@@ -128,10 +115,7 @@ export async function updateProjectAction(
 export async function deleteProjectAction(
 	projectId: string,
 ): Promise<FormState> {
-	const { userId } = await auth();
-	if (!userId) return { success: false, message: "Unauthorized" };
-
-	const isOwner = await userIsOwner(projectId, userId);
+	const isOwner = await LoggedInOwner(projectId);
 	if (!isOwner) {
 		return {
 			success: false,

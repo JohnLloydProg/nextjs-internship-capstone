@@ -89,10 +89,10 @@ export interface Attachment {
 export interface TaskHistory {
 	id: string;
 	taskId: string;
-	userId: string;
+	changedBy: User | null;
 	editId: string;
 	fieldName: string;
-	oldValue: string;
-	newValue: string;
+	oldValue: string | null;
+	newValue: string | null;
 	changedAt: Date;
 }

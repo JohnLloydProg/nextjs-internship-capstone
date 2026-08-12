@@ -1,0 +1,1 @@
+ALTER TABLE "task_history" DROP CONSTRAINT "task_history_task_id_tasks_id_fkey", ADD CONSTRAINT "task_history_task_id_tasks_id_fkey" FOREIGN KEY ("task_id") REFERENCES "tasks"("id") ON DELETE SET NULL;

@@ -1,9 +1,9 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { Comment } from "@/types/index";
+import { getLoggedInUser } from "../authentication";
 import { deleteAttachmentRecord } from "../db/mutations/attachments";
 import {
 	createComment,
@@ -14,7 +14,6 @@ import {
 	count_attachment_links,
 	getAttachmentLinksByCommentId,
 } from "../db/queries/attachments";
-import { getUserByClerkId } from "../db/queries/users";
 import { deleteFile } from "../storage";
 import { attachFilesToComment } from "./attachments";
 import type { FormState } from "./projects";
@@ -31,11 +30,8 @@ export async function createCommentAction(
 	_prevState: FormState | null,
 	formData: FormData,
 ): Promise<FormState> {
-	const { userId } = await auth();
-	if (!userId) return { success: false, message: "Unauthorized" };
-
-	const user = await getUserByClerkId(userId);
-	if (!user) return { success: false, message: "Can't find user" };
+	const user = await getLoggedInUser();
+	if (!user) return { success: false, message: "Unauthorized" };
 
 	const data = Object.fromEntries(
 		Array.from(formData.entries()).filter(([key]) => key !== "files"),
@@ -96,11 +92,8 @@ export async function updateCommentAction(
 	_prevState: FormState | null,
 	formData: FormData,
 ): Promise<FormState> {
-	const { userId } = await auth();
-	if (!userId) return { success: false, message: "Unauthorized" };
-
-	const user = await getUserByClerkId(userId);
-	if (!user) return { success: false, message: "Can't find user" };
+	const user = await getLoggedInUser();
+	if (!user) return { success: false, message: "Unauthorized" };
 
 	if (!comment) return { success: false, message: "Comment not found" };
 	if (comment.author.id !== user.id) {
@@ -136,11 +129,8 @@ export async function deleteCommentAction(
 	projectId: string,
 	comment: Comment,
 ): Promise<FormState> {
-	const { userId } = await auth();
-	if (!userId) return { success: false, message: "Unauthorized" };
-
-	const user = await getUserByClerkId(userId);
-	if (!user) return { success: false, message: "Can't find user" };
+	const user = await getLoggedInUser();
+	if (!user) return { success: false, message: "Unauthorized" };
 
 	if (!comment) return { success: false, message: "Comment not found" };
 	if (comment.author.id !== user.id) {

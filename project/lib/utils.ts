@@ -10,3 +10,9 @@ export function formatBytes(bytes: number): string {
 	if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
 	return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
+
+export function toHistoryValue(value: unknown): string | null {
+	if (value === null || value === undefined) return null;
+	if (value instanceof Date) return value.toISOString();
+	return String(value);
+}

@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db } from "..";
-import { tasks } from "../schema";
+import { taskHistory, tasks } from "../schema";
 
 type NewTask = typeof tasks.$inferInsert;
 type UpdateTask = Partial<Omit<NewTask, "id" | "createdAt" | "updatedAt">>;
@@ -28,4 +28,34 @@ export async function deleteTask(taskId: string) {
 		.returning();
 
 	return deletedTask;
+}
+
+export interface FieldChange {
+	fieldName: string;
+	oldValue: string | null;
+	newValue: string | null;
+}
+
+export async function createTaskHistoryEntries(
+	taskId: string,
+	userId: string | null,
+	changes: FieldChange[],
+) {
+	if (changes.length === 0) return [];
+
+	const editId = crypto.randomUUID();
+
+	return db
+		.insert(taskHistory)
+		.values(
+			changes.map((change) => ({
+				taskId,
+				userId,
+				editId,
+				fieldName: change.fieldName,
+				oldValue: change.oldValue,
+				newValue: change.newValue,
+			})),
+		)
+		.returning();
 }

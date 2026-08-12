@@ -26,6 +26,7 @@ import { useLists } from "@/hooks/use-lists";
 import { useMembers } from "@/hooks/use-members";
 import { deleteTaskAction, updateTaskAction } from "@/lib/actions/tasks";
 import type { Task } from "@/types/index";
+import ActivityPanel from "./activity-panel";
 import AttachmentsPanel from "./attachment-panel";
 
 type EditableField =
@@ -65,7 +66,7 @@ export function TaskMenuButton({
 }) {
 	const [open, setOpen] = useState(false);
 	const [state, formAction, isPending] = useActionState(
-		updateTaskAction.bind(null, projectId).bind(null, task),
+		updateTaskAction.bind(null, projectId).bind(null, task.id),
 		null,
 	);
 	const [isDeleting, startDeleteTransition] = useTransition();
@@ -429,11 +430,7 @@ export function TaskMenuButton({
 							<Label className="text-foreground font-semibold">
 								Activity History
 							</Label>
-							<div className="rounded-lg border border-border bg-muted/30 p-4 h-full min-h-32 flex items-center justify-center">
-								<p className="text-xs text-muted-foreground text-center">
-									No activity yet
-								</p>
-							</div>
+							<ActivityPanel task={task} />
 						</div>
 					</div>
 				</div>

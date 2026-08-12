@@ -1,18 +1,29 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import type { Task, User } from "@/types/index";
+import type { TaskHistory } from "@/types/index";
+import { getLoggedInUser } from "../authentication";
 import { deleteAttachmentRecord } from "../db/mutations/attachments";
-import { createTask, deleteTask, updateTask } from "../db/mutations/tasks";
+import type { FieldChange } from "../db/mutations/tasks";
+import {
+	createTask,
+	createTaskHistoryEntries,
+	deleteTask,
+	updateTask,
+} from "../db/mutations/tasks";
 import {
 	count_attachment_links,
 	getAttachmentLinksByTaskId,
 } from "../db/queries/attachments";
 import { getTaskCountByListId } from "../db/queries/lists";
-import { getUserByClerkId } from "../db/queries/users";
+import {
+	getHistoryByTaskId,
+	getTaskListIdsByIds,
+	getTaskRawById,
+} from "../db/queries/tasks";
 import { deleteFile } from "../storage";
+import { toHistoryValue } from "../utils";
 import { attachFilesToTask } from "./attachments";
 import type { FormState } from "./projects";
 
@@ -60,17 +71,8 @@ export async function createTaskAction(
 	_prevState: FormState | null,
 	formData: FormData,
 ): Promise<FormState> {
-	const { userId } = await auth();
-	if (!userId) return { success: false, message: "Unauthorized" };
-
-	let user: User | null;
-	try {
-		user = await getUserByClerkId(userId);
-	} catch (error) {
-		console.error("Error while getting user:", error);
-		return { success: false, message: "Error while getting user." };
-	}
-	if (!user) return { success: false, message: "Can't find user" };
+	const user = await getLoggedInUser();
+	if (!user) return { success: false, message: "Unauthorized" };
 
 	const data = Object.fromEntries(
 		Array.from(formData.entries()).filter(([key]) => key !== "files"),
@@ -124,22 +126,15 @@ export async function createTaskAction(
 
 export async function updateTaskAction(
 	projectId: string,
-	task: Task,
-	_prevState: FormState | null, // Replace 'any' with your FormState type
+	taskId: string,
+	_prevState: FormState | null,
 	formData: FormData,
 ): Promise<FormState> {
-	// Replace 'any' with your FormState type
-	const { userId } = await auth();
-	if (!userId) return { success: false, message: "Unauthorized" };
+	const user = await getLoggedInUser();
+	if (!user) return { success: false, message: "Unauthorized" };
 
-	let user: User | null;
-	try {
-		user = await getUserByClerkId(userId);
-	} catch (error) {
-		console.error("Error while getting user:", error);
-		return { success: false, message: "Error while getting user." };
-	}
-	if (!user) return { success: false, message: "Can't find user" };
+	const existingTask = await getTaskRawById(taskId);
+	if (!existingTask) return { success: false, message: "Task not found!" };
 
 	const data = Object.fromEntries(formData.entries());
 
@@ -152,25 +147,42 @@ export async function updateTaskAction(
 		};
 	}
 
-	try {
-		// Clean the object to remove undefined fields so Drizzle doesn't try to update them
-		const updateData = Object.fromEntries<string | Date | number | null>(
-			Object.entries(validatedFields.data).filter(([_, v]) => v !== undefined),
-		);
+	const updateData = Object.fromEntries<string | Date | number | null>(
+		Object.entries(validatedFields.data).filter(([_, v]) => v !== undefined),
+	);
 
-		if (task.listId !== validatedFields.data.listId) {
+	try {
+		if (existingTask.listId !== validatedFields.data.listId) {
 			updateData.position = await getTaskCountByListId(
 				validatedFields.data.listId,
 			);
 		}
 
-		await updateTask(task.id, updateData);
+		await updateTask(taskId, updateData);
 	} catch (error) {
 		console.error("Failed to update task in database:", error);
 		return {
 			message: "Database error: Failed to update task.",
 			success: false,
 		};
+	}
+
+	const taskFields = existingTask as Record<string, unknown>;
+	const changes: FieldChange[] = [];
+	for (const [fieldName, newValue] of Object.entries(updateData)) {
+		const oldValue = toHistoryValue(taskFields[fieldName]);
+		const normalizedNew = toHistoryValue(newValue);
+		if (oldValue !== normalizedNew) {
+			changes.push({ fieldName, oldValue, newValue: normalizedNew });
+		}
+	}
+
+	if (changes.length > 0) {
+		try {
+			await createTaskHistoryEntries(taskId, user.id, changes);
+		} catch (error) {
+			console.error("Failed to record task history:", error);
+		}
 	}
 
 	revalidatePath(`/projects/${projectId}`);
@@ -185,17 +197,8 @@ export async function deleteTaskAction(
 	projectId: string,
 	taskId: string,
 ): Promise<FormState> {
-	const { userId } = await auth();
-	if (!userId) return { success: false, message: "Unauthorized" };
-
-	let user: User | null;
-	try {
-		user = await getUserByClerkId(userId);
-	} catch (error) {
-		console.error("Error while getting user:", error);
-		return { success: false, message: "Error while getting user." };
-	}
-	if (!user) return { success: false, message: "Can't find user" };
+	const user = await getLoggedInUser();
+	if (!user) return { success: false, message: "Unauthorized" };
 
 	try {
 		const attachmentLinks = await getAttachmentLinksByTaskId(taskId);
@@ -231,6 +234,12 @@ export async function moveTasksAction(
 		position: number;
 	}[],
 ) {
+	const user = await getLoggedInUser();
+	if (!user) return { success: false, message: "Unauthorized" };
+
+	if (updates.length === 0) return { success: true };
+
+	const previousListIds = await getTaskListIdsByIds(updates.map((u) => u.id));
 	try {
 		for (const update of updates) {
 			await updateTask(update.id, {
@@ -238,7 +247,6 @@ export async function moveTasksAction(
 				position: update.position,
 			});
 		}
-		revalidatePath(`/projects/${projectId}`);
 	} catch (_error) {
 		return {
 			success: false,
@@ -246,8 +254,39 @@ export async function moveTasksAction(
 		};
 	}
 
+	for (const update of updates) {
+		const previousListId = previousListIds.get(update.id);
+		if (!previousListId || previousListId === update.listId) continue;
+
+		try {
+			await createTaskHistoryEntries(update.id, user.id, [
+				{
+					fieldName: "listId",
+					oldValue: previousListId,
+					newValue: update.listId,
+				},
+			]);
+		} catch (error) {
+			console.error("Failed to record task move history:", error);
+		}
+	}
+
+	revalidatePath(`/projects/${projectId}`);
+
 	return {
 		success: true,
 		message: "Tasks updated successfully",
 	};
+}
+
+export async function getHistoryAction(
+	taskId: string,
+): Promise<Record<string, TaskHistory[]>> {
+	try {
+		const history = await getHistoryByTaskId(taskId);
+		return history;
+	} catch (_error) {
+		console.error("Error while getting history:", _error);
+		return {};
+	}
 }

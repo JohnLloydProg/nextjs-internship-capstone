@@ -2,6 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
+import { getLoggedInUser } from "../authentication";
 import {
 	createAttachmentRecord,
 	deleteAttachmentRecord,
@@ -13,7 +14,6 @@ import {
 	count_attachment_links,
 	findAttachmentByHash,
 } from "../db/queries/attachments";
-import { getUserByClerkId } from "../db/queries/users";
 import { deleteFile, hashBuffer, uploadFile } from "../storage";
 import type { FormState } from "./projects";
 
@@ -95,11 +95,8 @@ export async function createAttachmentAction(
 	_prevState: FormState | null,
 	formData: FormData,
 ): Promise<FormState> {
-	const { userId } = await auth();
-	if (!userId) return { success: false, message: "Unauthorized" };
-
-	const user = await getUserByClerkId(userId);
-	if (!user) return { success: false, message: "Can't find user" };
+	const user = await getLoggedInUser();
+	if (!user) return { success: false, message: "Unauthorized" };
 
 	const file = formData.get("file");
 	if (!(file instanceof File) || file.size === 0) {
