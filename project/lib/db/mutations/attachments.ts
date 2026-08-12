@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "..";
-import { attachments, attachmentTasks } from "../schema";
+import { attachmentComments, attachments, attachmentTasks } from "../schema";
 
 type NewAttachment = typeof attachments.$inferInsert;
 
@@ -41,6 +41,36 @@ export async function unlinkAttachmentFromTask(
 			and(
 				eq(attachmentTasks.attachmentId, attachmentId),
 				eq(attachmentTasks.taskId, taskId),
+			),
+		)
+		.returning();
+	return deleted;
+}
+
+export async function linkAttachmentToComment(
+	attachmentId: string,
+	commentId: string,
+) {
+	const [link] = await db
+		.insert(attachmentComments)
+		.values({ attachmentId, commentId })
+		.onConflictDoNothing({
+			target: [attachmentComments.attachmentId, attachmentComments.commentId],
+		})
+		.returning();
+	return link;
+}
+
+export async function unlinkAttachmentFromComment(
+	attachmentId: string,
+	commentId: string,
+) {
+	const [deleted] = await db
+		.delete(attachmentComments)
+		.where(
+			and(
+				eq(attachmentComments.attachmentId, attachmentId),
+				eq(attachmentComments.commentId, commentId),
 			),
 		)
 		.returning();

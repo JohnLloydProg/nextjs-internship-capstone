@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import {
 	createAttachmentRecord,
 	deleteAttachmentRecord,
+	linkAttachmentToComment,
 	linkAttachmentToTask,
 	unlinkAttachmentFromTask,
 } from "../db/mutations/attachments";
@@ -42,6 +43,28 @@ async function processAttachmentUpload(file: File, uploaderId: string) {
 	}
 
 	return attachment;
+}
+
+export async function attachFilesToComment(
+	commentId: string,
+	files: File[],
+	uploaderId: string,
+): Promise<{ skipped: string[] }> {
+	const skipped: string[] = [];
+
+	for (const file of files) {
+		if (!(file instanceof File) || file.size === 0) continue;
+
+		if (file.size > MAX_FILE_SIZE) {
+			skipped.push(file.name);
+			continue;
+		}
+
+		const attachment = await processAttachmentUpload(file, uploaderId);
+		if (attachment) await linkAttachmentToComment(attachment.id, commentId);
+	}
+
+	return { skipped };
 }
 
 export async function attachFilesToTask(

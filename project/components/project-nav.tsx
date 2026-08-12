@@ -8,6 +8,7 @@ export default function ProjectNavBar({ projectId }: { projectId: string }) {
 	const navigations = [
 		{ link: `/projects/${projectId}`, content: "Tasks" },
 		{ link: `/projects/${projectId}/members`, content: "Members" },
+		{ link: `/projects/${projectId}/comments`, content: "Comments" },
 		{ link: `/projects/${projectId}/settings`, content: "Settings" },
 	];
 

@@ -7,8 +7,8 @@ import type { Task, User } from "@/types/index";
 import { createTask, deleteTask, updateTask } from "../db/mutations/tasks";
 import { getTaskCountByListId } from "../db/queries/lists";
 import { getUserByClerkId } from "../db/queries/users";
-import type { FormState } from "./projects";
 import { attachFilesToTask } from "./attachments";
+import type { FormState } from "./projects";
 
 const createTaskSchema = z.object({
 	title: z.string().min(1, "Task title is required"),
