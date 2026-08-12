@@ -4,9 +4,15 @@ import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { Task, User } from "@/types/index";
+import { deleteAttachmentRecord } from "../db/mutations/attachments";
 import { createTask, deleteTask, updateTask } from "../db/mutations/tasks";
+import {
+	count_attachment_links,
+	getAttachmentLinksByTaskId,
+} from "../db/queries/attachments";
 import { getTaskCountByListId } from "../db/queries/lists";
 import { getUserByClerkId } from "../db/queries/users";
+import { deleteFile } from "../storage";
 import { attachFilesToTask } from "./attachments";
 import type { FormState } from "./projects";
 
@@ -192,7 +198,15 @@ export async function deleteTaskAction(
 	if (!user) return { success: false, message: "Can't find user" };
 
 	try {
+		const attachmentLinks = await getAttachmentLinksByTaskId(taskId);
 		await deleteTask(taskId);
+		for (const link of attachmentLinks) {
+			const count = await count_attachment_links(link.attachment.id);
+			if (count === 0) {
+				await deleteAttachmentRecord(link.attachment.id);
+				await deleteFile(link.attachment.storageKey);
+			}
+		}
 	} catch (error) {
 		console.error("Failed to delete task in database:", error);
 		return {

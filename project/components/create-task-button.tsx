@@ -32,6 +32,7 @@ export default function CreateTaskButton({
 					setLists(lists);
 					setOpen(true);
 				}}
+				className="mt-auto"
 			>
 				<Plus className="w-4 h-4 mr-2" />
 				Create Task

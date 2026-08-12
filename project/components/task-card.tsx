@@ -34,16 +34,16 @@ export default function TaskCard({
 	return (
 		<div
 			ref={ref}
-			className={`group/card p-5 rounded-lg border bg-card shadow-sm flex flex-col gap-4 hover:border-primary border-border cursor-grab relative group transition-all ${isDragging ? "rotate-2 opacity-60" : "rotate-0 opacity-100"}`}
+			className={`group/card px-3 py-2 rounded-lg border bg-card shadow-sm flex flex-col gap-4 hover:border-primary border-border cursor-grab relative group transition-all ${isDragging ? "rotate-2 opacity-60" : "rotate-0 opacity-100"}`}
 		>
-			<div className="flex items-start justify-between gap-3">
-				<span className="font-bold text-foreground text-base tracking-tight leading-snug pt-1">
+			<div className="flex items-start justify-between">
+				<h3 className="font-bold text-foreground text-base tracking-tight leading-snug pt-1">
 					{task.title}
-				</span>
+				</h3>
 
 				<div className="flex items-center gap-1 shrink-0">
 					<span
-						className={`px-3 py-0.5 rounded-full text-[11px] font-bold ${PRIORITY_STYLES[task.priority] ?? "bg-zinc-300 text-zing-900"}`}
+						className={`px-3 py-0.5 rounded-full text-[10px] font-bold ${PRIORITY_STYLES[task.priority] ?? "bg-zinc-300 text-zing-900"}`}
 					>
 						{task.priority.toUpperCase()}
 					</span>
@@ -56,7 +56,7 @@ export default function TaskCard({
 				</div>
 			</div>
 
-			<div className="flex justify-between mt-auto items-center pt-2">
+			<div className="flex justify-between items-center">
 				<span className="text-sm font-medium text-foreground">
 					{task.dueDate
 						? new Date(task.dueDate).toLocaleDateString("en-Us", {

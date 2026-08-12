@@ -3,7 +3,7 @@
 import { CollisionPriority } from "@dnd-kit/abstract";
 import { DragDropProvider, useDroppable } from "@dnd-kit/react";
 import { useSortable } from "@dnd-kit/react/sortable";
-import { Trash2 } from "lucide-react";
+import { CheckIcon, EditIcon, GripVertical, Trash2 } from "lucide-react";
 import { type KeyboardEvent, useEffect, useState, useTransition } from "react";
 import CreateListModal from "@/components/create-list-button";
 import CreateTaskButton from "@/components/create-task-button";
@@ -97,16 +97,16 @@ export function BoardColumn({
 	});
 
 	const [_isLoading, startTransition] = useTransition();
-	const [isEditingTitle, setIsEditingTitle] = useState(false);
+	const [isEditing, setIsEditing] = useState(false);
 	const [titleValue, setTitleValue] = useState(list.name);
 
-	const [isEditingLimit, setIsEditingLimit] = useState(false);
 	const [limitValue, setLimitValue] = useState(
 		list.suggestedLimit ? list.suggestedLimit.toString() : "",
 	);
 
-	const handleTitleDoubleClick = () => setIsEditingTitle(true);
-	const handleTitleBlur = () => {
+	const handleStartEditing = () => setIsEditing(true);
+
+	const handleSave = () => {
 		startTransition(async () => {
 			await updateListAction(
 				projectId,
@@ -115,33 +115,24 @@ export function BoardColumn({
 				Number(limitValue),
 			);
 		});
-		setIsEditingTitle(false);
+		setIsEditing(false);
 	};
+
 	const handleTitleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-		if (e.key === "Enter") handleTitleBlur();
+		if (e.key === "Enter") handleSave();
 		if (e.key === "Escape") {
 			setTitleValue(list.name);
-			setIsEditingTitle(false);
+			setLimitValue(list.suggestedLimit ? list.suggestedLimit.toString() : "");
+			setIsEditing(false);
 		}
 	};
 
-	const handleLimitDoubleClick = () => setIsEditingLimit(true);
-	const handleLimitBlur = () => {
-		startTransition(async () => {
-			await updateListAction(
-				projectId,
-				list.id,
-				titleValue,
-				Number(limitValue),
-			);
-		});
-		setIsEditingLimit(false);
-	};
 	const handleLimitKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-		if (e.key === "Enter") handleLimitBlur();
+		if (e.key === "Enter") handleSave();
 		if (e.key === "Escape") {
+			setTitleValue(list.name);
 			setLimitValue(list.suggestedLimit ? list.suggestedLimit.toString() : "");
-			setIsEditingLimit(false);
+			setIsEditing(false);
 		}
 	};
 
@@ -156,67 +147,42 @@ export function BoardColumn({
 		currentLimit !== Infinity && list.tasks.length > currentLimit;
 
 	return (
-		<div
-			ref={columnRef}
-			className="group w-80 h-fit bg-card rounded-md border border-border flex flex-col overflow-hidden"
-		>
-			<div
-				ref={columnHandleRef}
-				className="px-5 py-3 min-h-14 flex items-center justify-between group-hover:bg-primary/40 text-foreground bg-foreground/20 transition-colors"
-			>
-				<div className="flex-1 mr-3 min-w-0">
-					{isEditingTitle ? (
-						<Input
-							autoFocus
-							value={titleValue}
-							onChange={(e) => setTitleValue(e.target.value)}
-							onBlur={handleTitleBlur}
-							onKeyDown={handleTitleKeyDown}
-							className="h-8 font-bold text-base bg-background px-2"
-						/>
-					) : (
-						<button
-							type="button"
-							onDoubleClick={handleTitleDoubleClick}
-							title="Double-click to edit"
-							className="font-bold text-base cursor-text block truncate select-none"
-						>
-							{titleValue}
-						</button>
-					)}
+		<div ref={columnRef} className="flex flex-col gap-2 h-full">
+			<div className="flex justify-between items-center h-7 shrink-0">
+				<div
+					ref={columnHandleRef}
+					className="w-7 h-7 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted cursor-grab active:cursor-grabbing transition-colors"
+				>
+					<GripVertical className="w-4 h-4" />
+					<span className="sr-only">Drag to reorder list</span>
 				</div>
-
-				<div className="flex items-center gap-2 shrink-0">
-					{isEditingLimit ? (
-						<Input
-							autoFocus
-							type="number"
-							min="1"
-							value={limitValue}
-							onChange={(e) => setLimitValue(e.target.value)}
-							onBlur={handleLimitBlur}
-							onKeyDown={handleLimitKeyDown}
-							className="h-7 w-16 text-center text-xs font-bold bg-background px-1"
-							placeholder="∞"
-						/>
-					) : (
-						<button
-							type="button"
-							onDoubleClick={handleLimitDoubleClick}
-							title="Double-click to set limit"
-							className={`text-black text-xs font-bold px-2 h-6 flex items-center justify-center rounded-sm cursor-text select-none transition-colors ${
-								isOverLimit ? "bg-red-300" : "bg-white"
-							}`}
+				<div className="flex justify-end items-center">
+					{isEditing ? (
+						<Button
+							variant="ghost"
+							size="icon"
+							onClick={handleSave}
+							className="w-7 h-7 text-muted-foreground hover:text-primary"
 						>
-							{list.tasks.length}/{limitValue || "∞"}
-						</button>
+							<CheckIcon className="w-4 h-4" />
+							<span className="sr-only">Save List</span>
+						</Button>
+					) : (
+						<Button
+							variant="ghost"
+							size="icon"
+							onClick={handleStartEditing}
+							className="w-7 h-7 text-muted-foreground"
+						>
+							<EditIcon className="w-4 h-4" />
+							<span className="sr-only">Edit List</span>
+						</Button>
 					)}
-
 					<Button
 						variant="ghost"
 						size="icon"
 						onClick={handleDeleteList}
-						className="w-7 h-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
+						className="w-7 h-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
 					>
 						<Trash2 className="w-4 h-4" />
 						<span className="sr-only">Delete List</span>
@@ -224,17 +190,64 @@ export function BoardColumn({
 				</div>
 			</div>
 
-			<div ref={dropZoneRef} className="p-4 flex flex-col gap-4">
-				{list.tasks.map((task, index) => (
-					<TaskCard
-						key={task.id}
-						index={index}
-						task={task}
-						projectId={projectId}
-						group={list.id}
-					/>
-				))}
-				{createWidget}
+			<div className="group w-85 flex-1 min-h-0 bg-card rounded-md border border-border flex flex-col overflow-hidden">
+				<div className="px-5 py-1 min-h-10 shrink-0 flex items-center justify-between group-hover:bg-primary/40 text-foreground bg-foreground/20 transition-colors">
+					<div className="flex-1 mr-3 min-w-0">
+						{isEditing ? (
+							<Input
+								autoFocus
+								value={titleValue}
+								onChange={(e) => setTitleValue(e.target.value)}
+								onKeyDown={handleTitleKeyDown}
+								className="h-8 font-bold text-base bg-background px-2"
+							/>
+						) : (
+							<span className="font-bold text-base block truncate select-none">
+								{titleValue}
+							</span>
+						)}
+					</div>
+
+					<div className="flex items-center gap-2 shrink-0">
+						{isEditing ? (
+							<Input
+								type="number"
+								min="1"
+								value={limitValue}
+								onChange={(e) => setLimitValue(e.target.value)}
+								onKeyDown={handleLimitKeyDown}
+								className="h-7 w-16 text-center text-xs font-bold bg-background px-1"
+								placeholder="∞"
+							/>
+						) : (
+							<span
+								className={`text-black text-xs font-bold px-2 h-6 flex items-center justify-center rounded-sm select-none transition-colors ${
+									isOverLimit ? "bg-red-300" : "bg-white"
+								}`}
+							>
+								{list.tasks.length}/{limitValue || "∞"}
+							</span>
+						)}
+					</div>
+				</div>
+
+				<div
+					ref={dropZoneRef}
+					className="flex-1 min-h-0 flex flex-col gap-2 p-2"
+				>
+					<div className="flex flex-col gap-3 overflow-y-auto overflow-x-hidden scrollbar-thin">
+						{list.tasks.map((task, index) => (
+							<TaskCard
+								key={task.id}
+								index={index}
+								task={task}
+								projectId={projectId}
+								group={list.id}
+							/>
+						))}
+					</div>
+					{createWidget}
+				</div>
 			</div>
 		</div>
 	);
@@ -353,7 +366,7 @@ export default function KanbanBoard({
 	return (
 		<DragDropProvider onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
 			<div className="flex flex-col w-full max-w-6xl overflow-x-auto scrollbar-thin">
-				<div className="flex flex-col lg:flex-row gap-6 p-5 w-fit min-h-[calc(100vh-180px)]">
+				<div className="flex flex-col lg:flex-row gap-6 p-5 w-fit h-[calc(100vh-180px)]">
 					{dynamicLists.map((list, index) => (
 						<BoardColumn
 							key={list.id}
