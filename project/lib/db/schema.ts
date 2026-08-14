@@ -1,7 +1,9 @@
 import { defineRelations } from "drizzle-orm";
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import {
 	bigint,
 	boolean,
+	decimal,
 	index,
 	integer,
 	pgEnum,
@@ -86,6 +88,9 @@ export const projects = pgTable(
 			.references(() => users.id, { onDelete: "cascade" }),
 		status: projectStatusEnum("status").default("active").notNull(),
 		dueDate: timestamp("due_date"),
+		latestRecord: uuid("latest_record_id").references(
+			(): AnyPgColumn => projectProgressRecords.id,
+		),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at")
 			.defaultNow()
@@ -321,6 +326,40 @@ export const notifyAutomations = pgTable(
 		index("notifyAutomations_observer_idx").on(t.observerId),
 		index("notifyAutomations_user_idx").on(t.userId),
 	],
+);
+
+export const projectProgressRecords = pgTable(
+	"project_progress_records",
+	{
+		id: uuid("id").primaryKey().defaultRandom(),
+		projectId: uuid("project_id").references(() => projects.id, {
+			onDelete: "set null",
+		}),
+		projectName: text("project_name").notNull(),
+		numFinished: integer("number_of_finished").notNull(),
+		numTasks: integer("number_of_tasks").notNull(),
+		numDue: integer("number_of_overdue").notNull(),
+		cycleTime: decimal("cycle_time", { precision: 5, scale: 2 }).notNull(),
+		leadTime: decimal("lead_time", { precision: 5, scale: 2 }).notNull(),
+		recordedAt: timestamp("recorded_at").defaultNow().notNull(),
+	},
+	(t) => [index("record_project_id_date_idx").on(t.projectId, t.recordedAt)],
+);
+
+export const perUserRecords = pgTable(
+	"per_user_records",
+	{
+		id: uuid("id").primaryKey().defaultRandom(),
+		projectRecordId: uuid("project_record_id")
+			.notNull()
+			.references(() => projectProgressRecords.id, { onDelete: "cascade" }),
+		userId: uuid("user_id").references(() => users.id, {
+			onDelete: "set null",
+		}),
+		userName: text("user_name").notNull(),
+		noTasks: integer("number_of_tasks").notNull(),
+	},
+	(t) => [index("per_user_records_idx").on(t.projectRecordId, t.userId)],
 );
 
 export const relations = defineRelations(
