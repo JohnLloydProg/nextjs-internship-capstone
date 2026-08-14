@@ -26,6 +26,18 @@ import { deleteFile } from "../storage";
 import { toHistoryValue } from "../utils";
 import { attachFilesToTask } from "./attachments";
 import type { FormState } from "./projects";
+import { runTaskObserverAutomations } from "../automations";
+
+const TASK_FIELD_VALUES = [
+	"title",
+	"description",
+	"listId",
+	"priority",
+	"assigneeId",
+	"dueDate",
+	"startedAt",
+	"finishedAt",
+] as const;
 
 const createTaskSchema = z.object({
 	title: z.string().min(1, "Task title is required"),
@@ -101,6 +113,27 @@ export async function createTaskAction(
 			message: "Database error: Failed to create task.",
 			success: false,
 		};
+	}
+
+	if (createdTask) {
+		const creationChanges: FieldChange[] = TASK_FIELD_VALUES.filter(
+			(field) => field in validatedFields.data,
+		).map((field) => ({
+			fieldName: field,
+			oldValue: null,
+			newValue: toHistoryValue(
+				(validatedFields.data as Record<string, unknown>)[field],
+			),
+		}));
+
+		if (creationChanges.length > 0) {
+			await runTaskObserverAutomations(
+				projectId,
+				createdTask.id,
+				creationChanges,
+				`/projects/${projectId}`,
+			);
+		}
 	}
 
 	const files = formData
@@ -183,6 +216,13 @@ export async function updateTaskAction(
 		} catch (error) {
 			console.error("Failed to record task history:", error);
 		}
+
+		await runTaskObserverAutomations(
+			projectId,
+			taskId,
+			changes,
+			`/projects/${projectId}`,
+		);
 	}
 
 	revalidatePath(`/projects/${projectId}`);
@@ -258,17 +298,26 @@ export async function moveTasksAction(
 		const previousListId = previousListIds.get(update.id);
 		if (!previousListId || previousListId === update.listId) continue;
 
+		const changes: FieldChange[] = [
+			{
+				fieldName: "listId",
+				oldValue: previousListId,
+				newValue: update.listId,
+			},
+		];
+
 		try {
-			await createTaskHistoryEntries(update.id, user.id, [
-				{
-					fieldName: "listId",
-					oldValue: previousListId,
-					newValue: update.listId,
-				},
-			]);
+			await createTaskHistoryEntries(update.id, user.id, changes);
 		} catch (error) {
 			console.error("Failed to record task move history:", error);
 		}
+
+		await runTaskObserverAutomations(
+			projectId,
+			update.id,
+			changes,
+			`/projects/${projectId}`,
+		);
 	}
 
 	revalidatePath(`/projects/${projectId}`);

@@ -32,7 +32,21 @@ export const assignmentRole = pgEnum("assignment_role", [
 	"viewer",
 ]);
 
-export const attachmentType = pgEnum("type", ["comments", "tasks"]);
+export const taskObserverEvent = pgEnum("observer_events", [
+	"changed",
+	"equals",
+]);
+
+export const taskFields = pgEnum("task_fields", [
+	"title",
+	"description",
+	"listId",
+	"assigneeId",
+	"priority",
+	"dueDate",
+	"startedAt",
+	"finishedAt",
+]);
 
 export const roles = pgTable("roles", {
 	id: uuid("id").primaryKey().defaultRandom(),
@@ -261,6 +275,54 @@ export const attachmentComments = pgTable(
 	],
 );
 
+export const taskObservers = pgTable(
+	"task_observers",
+	{
+		id: uuid("id").primaryKey().defaultRandom(),
+		projectId: uuid("project_id")
+			.notNull()
+			.references(() => projects.id, { onDelete: "cascade" }),
+		fieldName: taskFields("field_name").notNull(),
+		event: taskObserverEvent("event").notNull().default("changed"),
+		value: text(),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+	},
+	(t) => [index("taskObserver_project_idx").on(t.projectId)],
+);
+
+export const setAutomations = pgTable(
+	"set_automation",
+	{
+		id: uuid("id").primaryKey().defaultRandom(),
+		observerId: uuid("observer_id")
+			.notNull()
+			.references(() => taskObservers.id, { onDelete: "cascade" }),
+		fieldName: taskFields("field_name").notNull(),
+		value: text().notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+	},
+	(t) => [index("setAutomations_observer_idx").on(t.observerId)],
+);
+
+export const notifyAutomations = pgTable(
+	"notify_automations",
+	{
+		observerId: uuid()
+			.notNull()
+			.references(() => taskObservers.id, { onDelete: "cascade" }),
+		userId: uuid("user_id")
+			.notNull()
+			.references(() => users.id, { onDelete: "cascade" }),
+		enabled: boolean("is_enabled").notNull().default(true),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+	},
+	(t) => [
+		primaryKey({ columns: [t.observerId, t.userId] }),
+		index("notifyAutomations_observer_idx").on(t.observerId),
+		index("notifyAutomations_user_idx").on(t.userId),
+	],
+);
+
 export const relations = defineRelations(
 	{
 		users,
@@ -275,6 +337,9 @@ export const relations = defineRelations(
 		attachmentComments,
 		attachmentTasks,
 		taskHistory,
+		taskObservers,
+		setAutomations,
+		notifyAutomations,
 	},
 	(r) => ({
 		projects: {
@@ -397,6 +462,35 @@ export const relations = defineRelations(
 				from: r.taskHistory.userId,
 				to: r.users.id,
 				optional: true,
+			}),
+		},
+		taskObservers: {
+			setters: r.many.setAutomations({
+				from: r.taskObservers.id,
+				to: r.setAutomations.observerId,
+			}),
+			notifiers: r.many.notifyAutomations({
+				from: r.taskObservers.id,
+				to: r.notifyAutomations.observerId,
+			}),
+		},
+		setAutomations: {
+			observer: r.one.taskObservers({
+				from: r.setAutomations.observerId,
+				to: r.taskObservers.id,
+				optional: false,
+			}),
+		},
+		notifyAutomations: {
+			observer: r.one.taskObservers({
+				from: r.notifyAutomations.observerId,
+				to: r.taskObservers.id,
+				optional: false,
+			}),
+			user: r.one.users({
+				from: r.notifyAutomations.userId,
+				to: r.users.id,
+				optional: false,
 			}),
 		},
 	}),

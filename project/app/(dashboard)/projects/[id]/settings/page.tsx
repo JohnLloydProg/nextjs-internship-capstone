@@ -4,6 +4,7 @@ import { getProjectById } from "@/lib/db/queries/projects";
 import { userIsOwner } from "@/lib/db/queries/users";
 import DeleteProjectSection from "./delete-project-section";
 import ProjectDetailsForm from "./project-details-form";
+import AutomationSection from "./workflow-section";
 
 export default async function ProjectSettingsDisplay({
 	params,
@@ -30,6 +31,8 @@ export default async function ProjectSettingsDisplay({
 				</p>
 				<ProjectDetailsForm project={project} isOwner={isOwner} />
 			</div>
+
+			<AutomationSection project={project} />
 
 			{isOwner && (
 				<div className="bg-card border border-destructive/40 rounded-xl shadow-sm p-8 w-full max-w-3xl">

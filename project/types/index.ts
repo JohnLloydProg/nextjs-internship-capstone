@@ -96,3 +96,47 @@ export interface TaskHistory {
 	newValue: string | null;
 	changedAt: Date;
 }
+
+export type TaskField =
+	| "title"
+	| "description"
+	| "listId"
+	| "assigneeId"
+	| "priority"
+	| "dueDate"
+	| "startedAt"
+	| "finishedAt";
+
+export type ObserverEvent = "changed" | "equals";
+
+export interface SetAutomation {
+	id: string;
+	observerId: string;
+	fieldName: TaskField;
+	value: string;
+	createdAt: Date;
+}
+
+export interface NotifyAutomation {
+	observerId: string;
+	userId: string;
+	enabled: boolean;
+	user: {
+		id: string;
+		firstName: string;
+		lastName: string;
+		profilePic: string | null;
+	};
+	createdAt: Date;
+}
+
+export interface TaskObserver {
+	id: string;
+	projectId: string;
+	fieldName: TaskField;
+	event: ObserverEvent;
+	value: string | null;
+	createdAt: Date;
+	setters: SetAutomation[];
+	notifiers: NotifyAutomation[];
+}
