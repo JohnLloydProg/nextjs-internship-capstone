@@ -1,8 +1,8 @@
-import { updateTask } from "./db/mutations/tasks";
-import type { FieldChange } from "./db/mutations/tasks";
 import type { TaskField } from "@/types/index";
-import { getObserversByProjectId } from "./db/queries/workflow";
 import { createNotification } from "./db/mutations/notifications";
+import type { FieldChange } from "./db/mutations/tasks";
+import { updateTask } from "./db/mutations/tasks";
+import { getObserversByProjectId } from "./db/queries/workflow";
 
 const DATE_FIELDS: TaskField[] = ["dueDate", "startedAt", "finishedAt"];
 

@@ -22,8 +22,8 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import type { List, TaskField, User } from "@/types/index";
 import { createObserverAction } from "@/lib/actions/automation";
+import type { List, TaskField, User } from "@/types/index";
 
 const FIELD_OPTIONS: { value: TaskField; label: string }[] = [
 	{ value: "listId", label: "List" },

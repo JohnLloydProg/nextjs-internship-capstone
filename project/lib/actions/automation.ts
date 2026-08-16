@@ -3,12 +3,12 @@
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { userIsOwner } from "../db/queries/users";
-import type { FormState } from "./projects";
 import {
 	createObserverWithActions,
 	deleteObserver,
 } from "../db/mutations/workflow";
+import { userIsOwner } from "../db/queries/users";
+import type { FormState } from "./projects";
 
 const TASK_FIELD_VALUES = [
 	"title",

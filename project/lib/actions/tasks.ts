@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { TaskHistory } from "@/types/index";
 import { getLoggedInUser } from "../authentication";
+import { runTaskObserverAutomations } from "../automations";
 import { deleteAttachmentRecord } from "../db/mutations/attachments";
 import type { FieldChange } from "../db/mutations/tasks";
 import {
@@ -26,7 +27,6 @@ import { deleteFile } from "../storage";
 import { toHistoryValue } from "../utils";
 import { attachFilesToTask } from "./attachments";
 import type { FormState } from "./projects";
-import { runTaskObserverAutomations } from "../automations";
 
 const TASK_FIELD_VALUES = [
 	"title",

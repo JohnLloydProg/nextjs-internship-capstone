@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
+import type { ObserverEvent, TaskField } from "@/types/index";
 import { db } from "..";
 import { notifyAutomations, setAutomations, taskObservers } from "../schema";
-import type { ObserverEvent, TaskField } from "@/types/index";
 
 export interface CreateObserverInput {
 	projectId: string;
