@@ -1,13 +1,6 @@
 "use client";
 import { SignOutButton, useUser } from "@clerk/nextjs";
-import {
-	BarChart2,
-	CalendarDays,
-	Folder,
-	Home,
-	Settings,
-	Users,
-} from "lucide-react";
+import { CalendarDays, Folder, Home, Settings, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -17,7 +10,6 @@ const NAV_ITEMS = [
 	{ name: "Dashboard", href: "/dashboard", icon: Home },
 	{ name: "Projects", href: "/projects", icon: Folder },
 	{ name: "Team", href: "/team", icon: Users },
-	{ name: "Analytics", href: "/analytics", icon: BarChart2 },
 	{ name: "Calendar", href: "/calendar", icon: CalendarDays },
 	{ name: "Settings", href: "/settings", icon: Settings },
 ];

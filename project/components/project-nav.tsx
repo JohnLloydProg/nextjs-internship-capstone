@@ -9,6 +9,7 @@ export default function ProjectNavBar({ projectId }: { projectId: string }) {
 		{ link: `/projects/${projectId}`, content: "Tasks" },
 		{ link: `/projects/${projectId}/members`, content: "Members" },
 		{ link: `/projects/${projectId}/comments`, content: "Comments" },
+		{ link: `/projects/${projectId}/analytics`, content: "Analytics" },
 		{ link: `/projects/${projectId}/settings`, content: "Settings" },
 	];
 

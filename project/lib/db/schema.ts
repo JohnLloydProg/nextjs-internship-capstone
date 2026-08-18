@@ -50,6 +50,17 @@ export const taskFields = pgEnum("task_fields", [
 	"finishedAt",
 ]);
 
+export const widgetType = pgEnum("widget_type", [
+	"progress_timeline",
+	"stat_total_tasks",
+	"stat_finished_ratio",
+	"stat_overdue",
+	"tasks_per_week",
+	"project_cycle_lead",
+	"user_cycle_lead",
+	"tasks_per_assignee",
+]);
+
 export const roles = pgTable("roles", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	name: varchar("name", { length: 255 }).notNull(),
@@ -90,6 +101,7 @@ export const projects = pgTable(
 		dueDate: timestamp("due_date"),
 		latestRecord: uuid("latest_record_id").references(
 			(): AnyPgColumn => projectProgressRecords.id,
+			{ onDelete: "set null" },
 		),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at")
@@ -358,8 +370,25 @@ export const perUserRecords = pgTable(
 		}),
 		userName: text("user_name").notNull(),
 		noTasks: integer("number_of_tasks").notNull(),
+		cycleTime: decimal("cycle_time", { precision: 5, scale: 2 }).notNull(),
+		leadTime: decimal("lead_time", { precision: 5, scale: 2 }).notNull(),
 	},
 	(t) => [index("per_user_records_idx").on(t.projectRecordId, t.userId)],
+);
+
+export const analyticsWidgets = pgTable(
+	"analytics_widgets",
+	{
+		id: uuid("id").primaryKey().defaultRandom(),
+		projectId: uuid("project_id")
+			.notNull()
+			.references(() => projects.id, { onDelete: "cascade" }),
+		userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }), // null = shared default layout
+		widgetType: widgetType("widget_type").notNull(),
+		position: integer("position").notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+	},
+	(t) => [index("analytics_widgets_project_idx").on(t.projectId, t.userId)],
 );
 
 export const relations = defineRelations(
@@ -379,6 +408,8 @@ export const relations = defineRelations(
 		taskObservers,
 		setAutomations,
 		notifyAutomations,
+		projectProgressRecords,
+		perUserRecords,
 	},
 	(r) => ({
 		projects: {
@@ -390,6 +421,11 @@ export const relations = defineRelations(
 			}),
 			lists: r.many.lists(),
 			assignments: r.many.assignments(),
+			latest: r.one.projectProgressRecords({
+				from: r.projects.latestRecord,
+				to: r.projectProgressRecords.id,
+				optional: true,
+			}),
 		},
 		users: {
 			ownedProjects: r.many.projects({
@@ -529,6 +565,13 @@ export const relations = defineRelations(
 			user: r.one.users({
 				from: r.notifyAutomations.userId,
 				to: r.users.id,
+				optional: false,
+			}),
+		},
+		perUserRecords: {
+			progressRecord: r.one.projectProgressRecords({
+				from: r.perUserRecords.projectRecordId,
+				to: r.projectProgressRecords.id,
 				optional: false,
 			}),
 		},
