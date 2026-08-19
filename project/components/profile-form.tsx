@@ -2,7 +2,8 @@
 
 import { Loader2 } from "lucide-react";
 import Image from "next/image";
-import { useActionState, useRef } from "react";
+import type { ChangeEvent } from "react";
+import { useActionState, useRef, useState } from "react";
 import { FormMessage } from "@/components/formMessage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,31 +15,42 @@ import type { User } from "@/types/index";
 export default function ProfileForm({ user }: { user: User }) {
 	const [state, formAction, isPending] = useActionState(updateUserAction, null);
 	const formRef = useRef<HTMLFormElement>(null);
+	const [profilePic, setProfilePic] = useState(user.profilePic);
+
+	const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+		if (event.target.files && event.target.files.length > 0) {
+			const selectedProfile = event.target.files[0];
+			setProfilePic(URL.createObjectURL(selectedProfile));
+		}
+	};
 
 	return (
 		<div className="bg-card border border-border rounded-xl shadow-sm p-8">
-			<div className="flex items-center gap-4 pb-6 border-b border-border">
-				<div className="w-16 h-16 rounded-full border-2 border-primary bg-muted overflow-hidden shrink-0">
-					{user.profilePic && (
-						<Image
-							src={user.profilePic}
-							alt={`${user.firstName} ${user.lastName}`}
-							width={64}
-							height={64}
-							className="w-full h-full object-cover"
+			<form ref={formRef} action={formAction} className="flex flex-col gap-6">
+				<div className="flex items-center gap-4 pb-6 border-b border-border">
+					<div className="w-16 h-16 rounded-full border-2 border-primary bg-muted overflow-hidden shrink-0 relative">
+						{profilePic && (
+							<Image
+								src={profilePic}
+								alt={`${user.firstName} ${user.lastName}`}
+								width={64}
+								height={64}
+								className="w-full h-full object-cover"
+							/>
+						)}
+						<input
+							id="profile"
+							name="profile"
+							type="file"
+							className="absolute w-full h-full left-0 top-0 opacity-0 cursor-pointer"
+							onChange={handleFileChange}
 						/>
-					)}
+					</div>
+					<h2 className="text-2xl font-bold text-foreground tracking-tight">
+						{user.firstName} {user.lastName}
+					</h2>
 				</div>
-				<h2 className="text-2xl font-bold text-foreground tracking-tight">
-					{user.firstName} {user.lastName}
-				</h2>
-			</div>
 
-			<form
-				ref={formRef}
-				action={formAction}
-				className="flex flex-col gap-6 pt-6"
-			>
 				<FormMessage state={state} />
 
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -78,27 +90,6 @@ export default function ProfileForm({ user }: { user: User }) {
 						{state?.errors?.lastName && (
 							<p className="text-sm text-destructive">
 								{state.errors.lastName[0]}
-							</p>
-						)}
-					</div>
-
-					<div className="space-y-1.5">
-						<Label
-							htmlFor="email"
-							className="text-xs font-bold text-muted-foreground uppercase tracking-wider"
-						>
-							Email Address
-						</Label>
-						<Input
-							id="email"
-							name="email"
-							type="email"
-							defaultValue={user.email}
-							disabled={isPending}
-						/>
-						{state?.errors?.email && (
-							<p className="text-sm text-destructive">
-								{state.errors.email[0]}
 							</p>
 						)}
 					</div>

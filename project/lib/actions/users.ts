@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createAssignment } from "../db/mutations/projects";
@@ -167,12 +167,6 @@ export async function updateAssignmentRoleAction(
 const updateProfileSchema = z.object({
 	firstName: z.string().min(1, "First name is required").max(100),
 	lastName: z.string().min(1, "Last name is required").max(100),
-	email: z
-		.string()
-		.regex(
-			/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-			"Enter a valid email address",
-		),
 	jobPosition: z.preprocess(
 		(val) => (val === "" ? undefined : val),
 		z.string().max(100).optional(),
@@ -190,7 +184,9 @@ export async function updateUserAction(
 	const { userId: clerkId } = await auth();
 	if (!clerkId) return { success: false, message: "Unauthorized" };
 
-	const data = Object.fromEntries(formData.entries());
+	const data = Object.fromEntries(
+		formData.entries().filter(([key]) => key !== "profile"),
+	);
 	const validatedFields = updateProfileSchema.safeParse(data);
 
 	if (!validatedFields.success) {
@@ -201,7 +197,28 @@ export async function updateUserAction(
 	}
 
 	try {
-		const updated = await updateUserByClerkId(clerkId, validatedFields.data);
+		const client = await clerkClient();
+		const user = await client.users.getUser(clerkId);
+		if (
+			user.firstName !== validatedFields.data.firstName ||
+			user.lastName !== validatedFields.data.lastName
+		) {
+			await client.users.updateUser(clerkId, {
+				firstName: validatedFields.data.firstName,
+				lastName: validatedFields.data.lastName,
+			});
+		}
+
+		const profile = formData.get("profile") as File;
+
+		if (profile.size > 0)
+			await client.users.updateUserProfileImage(clerkId, {
+				file: profile,
+			});
+		const updated = await updateUserByClerkId(clerkId, {
+			jobPosition: validatedFields.data.jobPosition,
+			bio: validatedFields.data.bio,
+		});
 		if (!updated) return { success: false, message: "User not found" };
 	} catch (error) {
 		console.error("Error while updating profile:", error);
