@@ -37,7 +37,11 @@ Features to implement:
 - Error states
 */
 
-export async function ProjectCard({ project }: { project: Project }) {
+export async function ProjectCard({
+	project,
+}: {
+	project: Project & { progress: number };
+}) {
 	const getStatusStyles = (status: string) => {
 		switch (status) {
 			case "active":
@@ -80,10 +84,12 @@ export async function ProjectCard({ project }: { project: Project }) {
 				<div className="h-3 w-full bg-zinc-200 rounded-full overflow-hidden">
 					<div
 						className="h-full bg-linear-to-r from-[#9E7F1F] to-[#D1B252] rounded-full"
-						style={{ width: `10%` }}
+						style={{ width: `${Math.floor(project.progress)}%` }}
 					/>
 				</div>
-				<span className="text-sm font-medium text-foreground">{10}%</span>
+				<span className="text-sm font-medium text-foreground">
+					{Math.floor(project.progress)}%
+				</span>
 			</div>
 
 			<div className="mt-6 flex items-center justify-between">

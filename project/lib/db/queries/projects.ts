@@ -29,7 +29,7 @@ interface GetProjectsOptions {
 
 export async function getProjects(
 	options?: GetProjectsOptions,
-): Promise<Project[]> {
+): Promise<(Project & { progress: number })[]> {
 	const { userId, search, status, newest } = options || {};
 
 	const conditions = [];
@@ -69,11 +69,15 @@ export async function getProjects(
 					user: true,
 				},
 			},
+			latest: true,
 		},
 	});
 
 	return projectList.map((project) => ({
 		members: project.assignments.map((assignment) => assignment.user),
+		progress: project.latest?.numTasks
+			? ((project.latest?.numFinished ?? 0) / project.latest?.numTasks) * 100
+			: 0,
 		...project,
 	}));
 }

@@ -48,8 +48,7 @@ export default function EmailForm() {
 			console.error("Error adding email:", error);
 			const message =
 				error instanceof Error && "errors" in error
-					? // Clerk errors carry a structured `errors` array with user-facing messages
-						((error as { errors?: { message: string }[] }).errors?.[0]
+					? ((error as { errors?: { message: string }[] }).errors?.[0]
 							?.message ?? "Failed to add email")
 					: "Failed to add email";
 			setAddError(message);
